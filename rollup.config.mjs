@@ -32,6 +32,7 @@ import cleanup from 'rollup-plugin-cleanup';
 import license from 'rollup-plugin-license';
 import prettier from 'rollup-plugin-prettier';
 import typescript from 'rollup-plugin-typescript2';
+import { copy } from '@web/rollup-plugin-copy';
 import { fileURLToPath } from 'url';
 
 export default {
@@ -49,6 +50,7 @@ export default {
         },
       },
     }),
+    copy({ patterns: '*.html', rootDir: './src' }),
     typescript(),
     prettier({ parser: 'typescript' }),
   ],
