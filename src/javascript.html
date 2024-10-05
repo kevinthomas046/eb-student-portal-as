@@ -1,0 +1,127 @@
+<!--
+Copyright 2024 Elevation Beats Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+<template id="student-selection">
+  <section class="student-selection-form spacer-30">
+    <div class="custom-select">
+      <select>
+        <option value="">Select student</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="recent-attendance spacer-30">
+    <h2>Recent Attendance</h2>
+    <div class="recent-attendance-table"></div>
+  </section>
+
+  <section class="recent-payments spacer-30">
+    <h2>Recent Payments</h2>
+    <div class="recent-payments-table"></div>
+  </section>
+
+  <section class="upcoming-classes spacer-30">
+    <h2>Upcoming Classes</h2>
+    <div class="upcoming-classes-table"></div>
+  </section>
+</template>
+
+<script>
+  function showStudentList(students) {
+    const studentSelectionTemplate =
+      document.querySelector('#student-selection');
+    const templateClone = studentSelectionTemplate.content.cloneNode(true);
+    let selectElm = templateClone.querySelector('.custom-select select');
+    selectElm.addEventListener('change', onStudentSelect);
+    students.forEach(student => {
+      const optionElm = document.createElement('option');
+      optionElm.value = student.FamilyId;
+      optionElm.innerText = student.FamilyName;
+      selectElm.appendChild(optionElm);
+    });
+    document.querySelector('main').lastElementChild.replaceWith(templateClone);
+  }
+
+  function onStudentSelect(event) {
+    console.log('Selected student', event.target.value);
+    const familyId = event.target.value;
+
+    if (familyId) {
+      google.script.run.withSuccessHandler(renderRecentAttendance).getRecentAttendanceByFamily(familyId);
+      renderRecentPayments(familyId);
+      renderUpcomingClasses(familyId);
+    }
+  }
+
+  function getStudents() {
+    google.script.run.withSuccessHandler(showStudentList).getFamilies();
+  }
+
+  function renderRecentAttendance(recentAttedance) {
+    const recentAttendanceGrid = recentAttedance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName]));
+    new gridjs.Grid({
+      columns: ['Name', 'Date', 'Class'],
+      pagination: {
+        limit: 2
+      },
+      data: recentAttendanceGrid,
+    }).render(document.querySelector('.recent-attendance-table'));
+  }
+
+  function renderRecentPayments(familyId) {
+    new gridjs.Grid({
+      columns: ['Name', 'Date', 'Class'],
+      pagination: {
+        limit: 2
+      },
+      data: [
+        ['John', 'john@example.com', '(353) 01 222 3333'],
+        ['Mark', 'mark@gmail.com', '(01) 22 888 4444'],
+        ['Eoin', 'eoin@gmail.com', '0097 22 654 00033'],
+        ['Sarah', 'sarahcdd@gmail.com', '+322 876 1233'],
+        ['Afshin', 'afshin@mail.com', '(353) 22 87 8356'],
+      ],
+    }).render(document.querySelector('.recent-payments-table'));
+  }
+
+  function renderUpcomingClasses(familyId) {
+    new gridjs.Grid({
+      columns: ['Name', 'Date', 'Class'],
+      pagination: {
+        limit: 2
+      },
+      data: [
+        ['John', 'john@example.com', '(353) 01 222 3333'],
+        ['Mark', 'mark@gmail.com', '(01) 22 888 4444'],
+        ['Eoin', 'eoin@gmail.com', '0097 22 654 00033'],
+        ['Sarah', 'sarahcdd@gmail.com', '+322 876 1233'],
+        ['Afshin', 'afshin@mail.com', '(353) 22 87 8356'],
+      ],
+    }).render(document.querySelector('.upcoming-classes-table'));
+  }
+
+  function loadApp() {
+    getStudents();
+  }
+
+  if (document.readyState === 'loading') {
+    // Loading hasn't finished yet
+    document.addEventListener('DOMContentLoaded', loadApp);
+  } else {
+    // `DOMContentLoaded` has already fired
+    loadApp();
+  }
+</script>

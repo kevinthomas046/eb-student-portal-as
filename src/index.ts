@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// main.ts
 import {
   FamilyRecord,
   RecentAttendance,
@@ -35,14 +34,36 @@ const SHEETS = {
 
 /**
  * Special function that handles HTTP GET requests to the published web app.
- * @return {HtmlOutput} The HTML page to be served.
+ * @return {GoogleAppsScript.HTML.HtmlOutput} The HTML page to be served.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function doGet() {
   Logger.log('Loading page');
   return HtmlService.createTemplateFromFile('page')
     .evaluate()
-    .setTitle('Elevation Beats: Student Portal');
+    .setTitle('Student Portal | Elevation Beats Inc');
 }
+
+/**
+ * Includes template based on filename that has a nested include
+ * @param filename file name to be included
+ * @returns {GoogleAppsScript.HTML.HtmlOutput}
+ */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+function includeTemplate(filename: string) {
+  return HtmlService.createTemplateFromFile(filename).evaluate().getContent();
+}
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/**
+ * Includes template based on filename
+ * @param filename file name to be included
+ * @returns {GoogleAppsScript.HTML.HtmlOutput}
+ */
+function include(filename: string) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
 /**
  * Retrieves a reference to a Google sheet by name.
  * @param {string} sheetName Name of the sheet to retrieve
@@ -61,6 +82,7 @@ function getSheetByName(sheetName: string): GoogleAppsScript.Spreadsheet.Sheet {
  * Retrieves a list of all families with their IDs and names from the Families google sheet.
  * @returns {Array<FamilyRow>} Array of objects containing family IDs and names.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function getFamilies(): Array<FamilyRecord> {
   const familiesSheet = getSheetByName(SHEETS.FAMILIES);
   const data = familiesSheet.getDataRange().getValues();
@@ -195,19 +217,3 @@ function getUpcomingClassesByFamily(familyId: string) {
       Price: row[3] !== '' ? row[3] : classGroupsData.slice(1)[row[1]][2], // get from ClassGroup sheet row[1]
     }));
 }
-
-console.log('----- getFamilies -----');
-const families = getFamilies();
-console.log(families);
-
-console.log('----- getRecentAttendanceByFamily -----');
-const recentAttendance = getRecentAttendanceByFamily(families[0].FamilyId);
-console.log(recentAttendance);
-
-console.log('----- getRecentPaymentsByFamily -----');
-const recentPayments = getRecentPaymentsByFamily(families[0].FamilyId);
-console.log(recentPayments);
-
-console.log('----- getUpcomingClassesByFamily -----');
-const upcomingClasses = getUpcomingClassesByFamily(families[0].FamilyId);
-console.log(upcomingClasses);

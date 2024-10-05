@@ -19,48 +19,16 @@ limitations under the License.
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Elevation Beats: Student Portal</title>
-    <script
-      src="https://jspm.dev/@spectrum-web-components/bundle/elements.js"
-      type="module"
-      async
-    >
-  </script>
+    <link
+      href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css"
+      rel="stylesheet"
+    />
+    <?!= include('stylesheet'); ?>
   </head>
   <body>
-    <sp-theme scale="medium" color="light">
-        <!-- Insert content requiring theme application here. -->
-        <sp-button onclick="alert('I was clicked');">Click me!</sp-button>
-        <sp-field-group>
-          <div>
-              <sp-field-label for="picker-xl" size="xl">
-                  Selection type:
-              </sp-field-label>
-              <sp-picker id="picker-xl" size="xl" label="Selection type">
-                  <sp-menu-item>Deselect</sp-menu-item>
-                  <sp-menu-item>Select inverse</sp-menu-item>
-                  <sp-menu-item>Feather...</sp-menu-item>
-                  <sp-menu-item>Select and mask...</sp-menu-item>
-                  <sp-menu-divider></sp-menu-divider>
-                  <sp-menu-item>Save selection</sp-menu-item>
-                  <sp-menu-item disabled>Make work path</sp-menu-item>
-              </sp-picker>
-          </div>
-          <div>
-              <sp-field-label for="picker-xl-quiet" size="xl">
-                  Selection type:
-              </sp-field-label>
-              <sp-picker id="picker-xl-quiet" quiet size="xl" label="Selection type">
-                  <sp-menu-item>Deselect</sp-menu-item>
-                  <sp-menu-item>Select inverse</sp-menu-item>
-                  <sp-menu-item>Feather...</sp-menu-item>
-                  <sp-menu-item>Select and mask...</sp-menu-item>
-                  <sp-menu-divider></sp-menu-divider>
-                  <sp-menu-item>Save selection</sp-menu-item>
-                  <sp-menu-item disabled>Make work path</sp-menu-item>
-              </sp-picker>
-          </div>
-      </sp-field-group>
-        <!-- End content requiring theme application. -->
-    </sp-theme>
+    <main>
+      <div class="loader"></div>
+    </main>
+    <?!= include('javascript'); ?>
   </body>
 </html>
