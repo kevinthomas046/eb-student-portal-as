@@ -4,6 +4,7 @@
     ".editorconfig",
     ".eslintignore",
     ".gitignore",
+    ".nvmrc",
     ".prettierignore",
     "*.txt",
     ".github",
