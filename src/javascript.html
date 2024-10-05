@@ -23,19 +23,22 @@ limitations under the License.
     </div>
   </section>
 
+  <div id="student-info"></div>
+</template>
+<template id="student-info-template">
   <section class="recent-attendance spacer-30">
     <h2>Recent Attendance</h2>
-    <div class="recent-attendance-table"></div>
+    <div id="recent-attendance-table"></div>
   </section>
 
   <section class="recent-payments spacer-30">
     <h2>Recent Payments</h2>
-    <div class="recent-payments-table"></div>
+    <div id="recent-payments-table"></div>
   </section>
 
   <section class="upcoming-classes spacer-30">
     <h2>Upcoming Classes</h2>
-    <div class="upcoming-classes-table"></div>
+    <div id="upcoming-classes-table"></div>
   </section>
 </template>
 
@@ -55,35 +58,41 @@ limitations under the License.
     document.querySelector('main').lastElementChild.replaceWith(templateClone);
   }
 
+  function showStudentInfo() {
+    const studentInfoTemplate = document.querySelector('#student-info-template');
+    const templateClone = studentInfoTemplate.content.cloneNode(true);
+    const studentInfoElm = document.querySelector('#student-info');
+    studentInfoElm.replaceChildren(templateClone);
+  }
+
   function onStudentSelect(event) {
     console.log('Selected student', event.target.value);
     const familyId = event.target.value;
 
     if (familyId) {
-      google.script.run.withSuccessHandler(renderRecentAttendance).getRecentAttendanceByFamily(familyId);
-      renderRecentPayments(familyId);
-      renderUpcomingClasses(familyId);
+      showStudentInfo();
+      google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderRecentAttendance).getRecentAttendanceByFamily(familyId);
+      // renderRecentPayments(familyId);
+      // renderUpcomingClasses(familyId);
     }
   }
 
-  function getStudents() {
-    google.script.run.withSuccessHandler(showStudentList).getFamilies();
-  }
-
   function renderRecentAttendance(recentAttedance) {
-    const recentAttendanceGrid = recentAttedance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName]));
-    new gridjs.Grid({
-      columns: ['Name', 'Date', 'Class'],
-      pagination: {
-        limit: 2
-      },
-      data: recentAttendanceGrid,
-    }).render(document.querySelector('.recent-attendance-table'));
+    if (recentAttedance) {
+      const recentAttendanceGrid = recentAttedance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName]));
+      new gridjs.Grid({
+        columns: ['Name', 'Date', 'Class'],
+        pagination: {
+          limit: 5
+        },
+        data: Array.from(recentAttendanceGrid),
+      }).render(document.getElementById('recent-attendance-table'));
+    }
   }
 
   function renderRecentPayments(familyId) {
     new gridjs.Grid({
-      columns: ['Name', 'Date', 'Class'],
+      columns: ['Name', 'Date', 'Classes'],
       pagination: {
         limit: 2
       },
@@ -111,6 +120,10 @@ limitations under the License.
         ['Afshin', 'afshin@mail.com', '(353) 22 87 8356'],
       ],
     }).render(document.querySelector('.upcoming-classes-table'));
+  }
+
+  function getStudents() {
+    google.script.run.withSuccessHandler(showStudentList).getFamilies();
   }
 
   function loadApp() {

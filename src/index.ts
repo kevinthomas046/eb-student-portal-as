@@ -101,14 +101,19 @@ function getRecentAttendanceByFamily(
   const studentsSheet = getSheetByName(SHEETS.STUDENTS);
   const studentsData = studentsSheet.getDataRange().getValues();
 
+  console.log('Getting attendance for family', familyId);
+
   const studentsInFamily: StudentRecord[] = studentsData
     .slice(1)
-    .filter(row => row[2] === familyId)
+    .filter(row => row[2].toString() === familyId)
     .map(row => ({ StudentId: row[0], StudentName: row[1] }));
+
+  console.log('Students in family', familyId, 'are', studentsInFamily);
 
   // get attendance for each student in the family
   const attendanceSheet = getSheetByName(SHEETS.ATTENDANCE);
   const attendanceData = attendanceSheet.getDataRange().getValues();
+
   const attendanceInFamily: AttendanceRecord[] = attendanceData
     .slice(1)
     .filter(row =>
@@ -123,13 +128,15 @@ function getRecentAttendanceByFamily(
       Price: row[4],
     }));
 
+  console.log('Attendance In Family', attendanceInFamily);
+
   // get class details for each attendance
   const classSheet = getSheetByName(SHEETS.CLASSES);
   const classData = classSheet.getDataRange().getValues();
   const classGroupSheet = getSheetByName(SHEETS.CLASS_GROUPS);
   const classGroupData = classGroupSheet.getDataRange().getValues();
 
-  return attendanceInFamily.map(attendance => {
+  const recentAttendance = attendanceInFamily.map(attendance => {
     const classDetails = classData.find(row => row[0] === attendance.ClassId);
     if (!classDetails)
       throw new Error(
@@ -145,12 +152,16 @@ function getRecentAttendanceByFamily(
 
     return {
       AttendanceId: attendance.AttendanceId,
-      ClassDate: classDetails[2],
+      ClassDate: new Date(classDetails[2]).toLocaleDateString(),
       StudentName: attendance.StudentName || '',
       ClassGroupName: classGroupDetails[1],
       Price: attendance.Price,
-    };
+    } as RecentAttendance;
   });
+
+  console.log('Recent attendance of family', familyId, 'is', recentAttendance);
+
+  return recentAttendance;
 }
 
 /*
