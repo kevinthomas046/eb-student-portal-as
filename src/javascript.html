@@ -72,54 +72,48 @@ limitations under the License.
     if (familyId) {
       showStudentInfo();
       google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderRecentAttendance).getRecentAttendanceByFamily(familyId);
-      // renderRecentPayments(familyId);
-      // renderUpcomingClasses(familyId);
+      google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderRecentPayments).getRecentPaymentsByFamily(familyId);
+      google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderUpcomingClasses).getUpcomingClassesByFamily(familyId);
     }
   }
 
-  function renderRecentAttendance(recentAttedance) {
-    if (recentAttedance) {
-      const recentAttendanceGrid = recentAttedance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName]));
+  function renderRecentAttendance(recentAttendance) {
+    if (recentAttendance) {
+      const recentAttendanceGrid = Array.from(recentAttendance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName, a.Price])));
       new gridjs.Grid({
-        columns: ['Name', 'Date', 'Class'],
+        columns: ['Name', 'Date', 'Class', 'Price'],
         pagination: {
           limit: 5
         },
-        data: Array.from(recentAttendanceGrid),
+        data: recentAttendanceGrid,
       }).render(document.getElementById('recent-attendance-table'));
     }
   }
 
-  function renderRecentPayments(familyId) {
-    new gridjs.Grid({
-      columns: ['Name', 'Date', 'Classes'],
-      pagination: {
-        limit: 2
-      },
-      data: [
-        ['John', 'john@example.com', '(353) 01 222 3333'],
-        ['Mark', 'mark@gmail.com', '(01) 22 888 4444'],
-        ['Eoin', 'eoin@gmail.com', '0097 22 654 00033'],
-        ['Sarah', 'sarahcdd@gmail.com', '+322 876 1233'],
-        ['Afshin', 'afshin@mail.com', '(353) 22 87 8356'],
-      ],
-    }).render(document.querySelector('.recent-payments-table'));
+  function renderRecentPayments(recentPayments) {
+    if (recentPayments) {
+      const recentPaymentsGrid = Array.from(recentPayments.map(p => ([p.PaymentDate, p.AmountPaid])));
+      new gridjs.Grid({
+        columns: ['Date', 'Amount'],
+        pagination: {
+          limit: 5
+        },
+        data: recentPaymentsGrid,
+      }).render(document.getElementById('recent-payments-table'));
+    }
   }
 
-  function renderUpcomingClasses(familyId) {
-    new gridjs.Grid({
-      columns: ['Name', 'Date', 'Class'],
-      pagination: {
-        limit: 2
-      },
-      data: [
-        ['John', 'john@example.com', '(353) 01 222 3333'],
-        ['Mark', 'mark@gmail.com', '(01) 22 888 4444'],
-        ['Eoin', 'eoin@gmail.com', '0097 22 654 00033'],
-        ['Sarah', 'sarahcdd@gmail.com', '+322 876 1233'],
-        ['Afshin', 'afshin@mail.com', '(353) 22 87 8356'],
-      ],
-    }).render(document.querySelector('.upcoming-classes-table'));
+  function renderUpcomingClasses(upcomingClasses) {
+    if (upcomingClasses) {
+      const upcomingClassesGrid = Array.from(upcomingClasses.map(c => ([c.ClassDate, c.ClassGroupName, c.Price])));
+      new gridjs.Grid({
+        columns: ['Date', 'Class', 'Price'],
+        pagination: {
+          limit: 5
+        },
+        data: upcomingClassesGrid,
+      }).render(document.getElementById('upcoming-classes-table'));
+    }
   }
 
   function getStudents() {

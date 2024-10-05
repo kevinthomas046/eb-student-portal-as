@@ -174,10 +174,10 @@ function getRecentPaymentsByFamily(familyId: string) {
   const paymentsData = paymentsSheet.getDataRange().getValues();
   return paymentsData
     .slice(1)
-    .filter(row => row[1] === familyId)
+    .filter(row => row[1].toString() === familyId)
     .map(row => ({
       PaymentId: row[0],
-      PaymentDate: row[2],
+      PaymentDate: new Date(row[2]).toLocaleDateString(),
       AmountPaid: row[3],
     }));
 }
@@ -203,10 +203,12 @@ function getUpcomingClassesByFamily(familyId: string) {
     new Set(
       studentsData
         .slice(1)
-        .filter(row => row[2] === familyId && row[4] === true)
+        .filter(row => row[2].toString() === familyId && row[4] === true)
         .map(row => row[3])
     )
   );
+
+  console.log('Class groups for family', familyId, 'are', uniqueClassGroupIds);
 
   // Get a list of classes from Class where classGroupID in array of classGroupIDs from uniqueClassGroupIds
   const classesData = getSheetByName(SHEETS.CLASSES).getDataRange().getValues();
@@ -218,13 +220,21 @@ function getUpcomingClassesByFamily(familyId: string) {
     const classDate = new Date(row[2]);
     return uniqueClassGroupIds.includes(row[1]) && classDate >= today;
   };
-  return classesData
-    .slice(1)
-    .filter(isUpcomingClass)
-    .map(row => ({
-      ClassId: row[0],
-      ClassDate: row[2],
-      ClassGroupName: classGroupsData.slice(1)[row[1]][1], // get from ClassGroup sheet row[1]
-      Price: row[3] !== '' ? row[3] : classGroupsData.slice(1)[row[1]][2], // get from ClassGroup sheet row[1]
-    }));
+  const upcomingClasses = classesData.slice(1).filter(isUpcomingClass);
+
+  console.log('Upcoming classes for', familyId, upcomingClasses);
+  return upcomingClasses.map(row => ({
+    ClassId: row[0],
+    ClassDate: new Date(row[2]).toLocaleDateString(),
+    ClassGroupName: classGroupsData.slice(1)[row[1]][1], // get from ClassGroup sheet row[1]
+    Price: row[3] !== '' ? row[3] : classGroupsData.slice(1)[row[1]][2], // get from ClassGroup sheet row[1]
+  }));
+}
+
+function getAllData(familyId: string) {
+  return {
+    recentAttendance: getRecentAttendanceByFamily(familyId),
+    recentPayments: getRecentPaymentsByFamily(familyId),
+    upcomingClasses: getUpcomingClassesByFamily(familyId),
+  };
 }
