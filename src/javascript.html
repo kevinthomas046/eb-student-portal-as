@@ -40,9 +40,18 @@ limitations under the License.
     <h2>Upcoming Classes</h2>
     <div id="upcoming-classes-table"></div>
   </section>
+
+  <section class="balance spacer-30" id="balance-container" style="display: none;">
+    <h2>Balance <span id="balance-amount"></span></h2>
+    <p><em>A negative balance indicates that there are classes yet to be paid for. Please pay promptly.</em></p>
+  </section>
 </template>
 
 <script>
+  let balance = 0;
+  let hasRecentAttendance = false;
+  let hasRecentPayment = false;
+
   function showStudentList(students) {
     const studentSelectionTemplate =
       document.querySelector('#student-selection');
@@ -58,6 +67,16 @@ limitations under the License.
     document.querySelector('main').lastElementChild.replaceWith(templateClone);
   }
 
+  function calculateBalance(amount) {
+    console.log(amount);
+    balance += amount;
+
+    if (hasRecentAttendance && hasRecentPayment) {
+      document.querySelector('#balance-amount').innerText = balance.toLocaleString('en-us', { style: "currency", currency: "USD" });
+      document.querySelector('#balance-container').style.display = '';
+    }
+  }
+
   function showStudentInfo() {
     const studentInfoTemplate = document.querySelector('#student-info-template');
     const templateClone = studentInfoTemplate.content.cloneNode(true);
@@ -66,8 +85,10 @@ limitations under the License.
   }
 
   function onStudentSelect(event) {
-    console.log('Selected student', event.target.value);
     const familyId = event.target.value;
+    balance = 0;
+    hasRecentAttendance = false;
+    hasRecentAttendance = false;
 
     if (familyId) {
       showStudentInfo();
@@ -80,6 +101,9 @@ limitations under the License.
   function renderRecentAttendance(recentAttendance) {
     if (recentAttendance) {
       const recentAttendanceGrid = Array.from(recentAttendance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName, a.Price])));
+      hasRecentAttendance = true;
+      console.log(recentAttendance);
+      calculateBalance(-recentAttendance.reduce((prev, next) => prev += next.Price, 0));
       new gridjs.Grid({
         columns: ['Name', 'Date', 'Class', 'Price'],
         pagination: {
@@ -93,6 +117,9 @@ limitations under the License.
   function renderRecentPayments(recentPayments) {
     if (recentPayments) {
       const recentPaymentsGrid = Array.from(recentPayments.map(p => ([p.PaymentDate, p.AmountPaid])));
+      hasRecentPayment = true;
+      console.log(recentPayments);
+      calculateBalance(recentPayments.reduce((prev, next) => prev += next.AmountPaid, 0));
       new gridjs.Grid({
         columns: ['Date', 'Amount'],
         pagination: {
