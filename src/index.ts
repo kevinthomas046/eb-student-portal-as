@@ -105,7 +105,7 @@ function getRecentAttendanceByFamily(
 
   const studentsInFamily: StudentRecord[] = studentsData
     .slice(1)
-    .filter(row => row[2].toString() === familyId)
+    .filter(row => row[2] === familyId)
     .map(row => ({ StudentId: row[0], StudentName: row[1] }));
 
   console.log('Students in family', familyId, 'are', studentsInFamily);
@@ -174,7 +174,7 @@ function getRecentPaymentsByFamily(familyId: string) {
   const paymentsData = paymentsSheet.getDataRange().getValues();
   return paymentsData
     .slice(1)
-    .filter(row => row[1].toString() === familyId)
+    .filter(row => row[1] === familyId)
     .map(row => ({
       PaymentId: row[0],
       PaymentDate: new Date(row[2]).toLocaleDateString(),
@@ -203,7 +203,7 @@ function getUpcomingClassesByFamily(familyId: string) {
     new Set(
       studentsData
         .slice(1)
-        .filter(row => row[2].toString() === familyId && row[4] === true)
+        .filter(row => row[2] === familyId && row[4] === true)
         .map(row => row[3])
     )
   );
