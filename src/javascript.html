@@ -41,8 +41,8 @@ limitations under the License.
         cols: ['Make', 'Model', 'Year', 'Color'],
         rows: [
           ['Ford', 'Fusion', '2011', 'Silver'],
-          ['Chevrolet', 'Cruz', '2018', 'White']
-        ]
+          ['Chevrolet', 'Cruz', '2018', 'White'],
+        ],
       };
     },
     created() {
@@ -102,7 +102,20 @@ limitations under the License.
               alert('Failed to get data');
             })
             .withSuccessHandler(recentPaymentsData => {
-              this.recentPaymentsData = recentPaymentsData;
+              this.hasRecentPaymentData = true;
+              new Grid({
+                columns: [
+                  {
+                    id: 'PaymentDate',
+                    name: 'Date',
+                  },
+                  { id: 'AmountPaid', name: 'Amount' },
+                ],
+                pagination: {
+                  limit: 5,
+                },
+                data: Array.from(recentPaymentsData),
+              }).render(document.getElementById('recent-payments-table'));
             })
             .getRecentPaymentsByFamily(this.selectedFamily);
           google.script.run
@@ -110,7 +123,18 @@ limitations under the License.
               alert('Failed to get data');
             })
             .withSuccessHandler(upcomingClassesData => {
-              this.upcomingClassesData = upcomingClassesData;
+              this.hasUpcomingClassesData = true;
+              new Grid({
+                columns: [
+                  { id: 'ClassDate', name: 'Date' },
+                  { id: 'ClassGroupName', name: 'Class' },
+                  { id: 'Price', name: 'Price' },
+                ],
+                pagination: {
+                  limit: 5,
+                },
+                data: Array.from(upcomingClassesData),
+              }).render(document.getElementById('upcoming-classes-table'));
             })
             .getUpcomingClassesByFamily(this.selectedFamily);
         }
@@ -143,13 +167,18 @@ limitations under the License.
     <div class="family-details__recent-attendance">
       <h2>Recent Attendance</h2>
       <span v-show="!hasRecentAttendanceData" class="loader"></span>
-      <div
-        id="recent-attendance-table"
-        class="family-details__recent-attendance-table"
-      ></div>
+      <div id="recent-attendance-table"></div>
     </div>
-    <div class="family-details__recent-payments"></div>
-    <div class="family-details__upcoming-classes"></div>
+    <div class="family-details__recent-payments">
+      <h2>Recent Payments</h2>
+      <span v-show="!hasRecentPaymentData" class="loader"></span>
+      <div id="recent-payments-table"></div>
+    </div>
+    <div class="family-details__upcoming-classes">
+      <h2>Upcoming Classes</h2>
+      <span v-show="!hasUpcomingClassesData" class="loader"></span>
+      <div id="upcoming-classes-table"></div>
+    </div>
     <div class="family-details__balance"></div>
   </section>
 </template>
