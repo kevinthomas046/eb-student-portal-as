@@ -13,149 +13,143 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
-<template id="student-selection">
-  <section class="student-selection-form spacer-30">
-    <div class="custom-select">
-      <select>
-        <option value="">Select student</option>
-      </select>
-    </div>
-  </section>
-
-  <div id="student-info"></div>
-</template>
-<template id="student-info-template">
-  <section class="recent-attendance spacer-30">
-    <h2>Recent Attendance</h2>
-    <div id="recent-attendance-table"></div>
-  </section>
-
-  <section class="recent-payments spacer-30">
-    <h2>Recent Payments</h2>
-    <div id="recent-payments-table"></div>
-  </section>
-
-  <section class="upcoming-classes spacer-30">
-    <h2>Upcoming Classes</h2>
-    <div id="upcoming-classes-table"></div>
-  </section>
-
-  <section class="balance spacer-30" id="balance-container" style="display: none;">
-    <h2>Balance <span id="balance-amount"></span></h2>
-    <p><em>A negative balance indicates that there are classes yet to be paid for. Please pay promptly.</em></p>
-  </section>
-</template>
-
-<script>
-  let balance = 0;
-  let hasRecentAttendance = false;
-  let hasRecentPayment = false;
-
-  function showStudentList(students) {
-    const studentSelectionTemplate =
-      document.querySelector('#student-selection');
-    const templateClone = studentSelectionTemplate.content.cloneNode(true);
-    let selectElm = templateClone.querySelector('.custom-select select');
-    selectElm.addEventListener('change', onStudentSelect);
-    students.forEach(student => {
-      const optionElm = document.createElement('option');
-      optionElm.value = student.FamilyId;
-      optionElm.innerText = student.FamilyName;
-      selectElm.appendChild(optionElm);
-    });
-    document.querySelector('main').lastElementChild.replaceWith(templateClone);
-  }
-
-  function calculateBalance(amount) {
-    console.log(amount);
-    balance += amount;
-
-    if (hasRecentAttendance && hasRecentPayment) {
-      document.querySelector('#balance-amount').innerText = balance.toLocaleString('en-us', { style: "currency", currency: "USD" });
-      document.querySelector('#balance-container').style.display = '';
+<script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js",
+      "gridjs": "https://unpkg.com/gridjs?module"
     }
-  }
-
-  function showStudentInfo() {
-    const studentInfoTemplate = document.querySelector('#student-info-template');
-    const templateClone = studentInfoTemplate.content.cloneNode(true);
-    const studentInfoElm = document.querySelector('#student-info');
-    studentInfoElm.replaceChildren(templateClone);
-  }
-
-  function onStudentSelect(event) {
-    const familyId = event.target.value;
-    balance = 0;
-    hasRecentAttendance = false;
-    hasRecentAttendance = false;
-
-    if (familyId) {
-      showStudentInfo();
-      google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderRecentAttendance).getRecentAttendanceByFamily(familyId);
-      google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderRecentPayments).getRecentPaymentsByFamily(familyId);
-      google.script.run.withFailureHandler(() => { alert('Failed to get family data'); }).withSuccessHandler(renderUpcomingClasses).getUpcomingClassesByFamily(familyId);
-    }
-  }
-
-  function renderRecentAttendance(recentAttendance) {
-    if (recentAttendance) {
-      const recentAttendanceGrid = Array.from(recentAttendance.map(a => ([a.StudentName, a.ClassDate, a.ClassGroupName, a.Price])));
-      hasRecentAttendance = true;
-      console.log(recentAttendance);
-      calculateBalance(-recentAttendance.reduce((prev, next) => prev += next.Price, 0));
-      new gridjs.Grid({
-        columns: ['Name', 'Date', 'Class', 'Price'],
-        pagination: {
-          limit: 5
-        },
-        data: recentAttendanceGrid,
-      }).render(document.getElementById('recent-attendance-table'));
-    }
-  }
-
-  function renderRecentPayments(recentPayments) {
-    if (recentPayments) {
-      const recentPaymentsGrid = Array.from(recentPayments.map(p => ([p.PaymentDate, p.AmountPaid])));
-      hasRecentPayment = true;
-      console.log(recentPayments);
-      calculateBalance(recentPayments.reduce((prev, next) => prev += next.AmountPaid, 0));
-      new gridjs.Grid({
-        columns: ['Date', 'Amount'],
-        pagination: {
-          limit: 5
-        },
-        data: recentPaymentsGrid,
-      }).render(document.getElementById('recent-payments-table'));
-    }
-  }
-
-  function renderUpcomingClasses(upcomingClasses) {
-    if (upcomingClasses) {
-      const upcomingClassesGrid = Array.from(upcomingClasses.map(c => ([c.ClassDate, c.ClassGroupName, c.Price])));
-      new gridjs.Grid({
-        columns: ['Date', 'Class', 'Price'],
-        pagination: {
-          limit: 5
-        },
-        data: upcomingClassesGrid,
-      }).render(document.getElementById('upcoming-classes-table'));
-    }
-  }
-
-  function getStudents() {
-    google.script.run.withSuccessHandler(showStudentList).getFamilies();
-  }
-
-  function loadApp() {
-    getStudents();
-  }
-
-  if (document.readyState === 'loading') {
-    // Loading hasn't finished yet
-    document.addEventListener('DOMContentLoaded', loadApp);
-  } else {
-    // `DOMContentLoaded` has already fired
-    loadApp();
   }
 </script>
+
+<script type="module">
+  import { Grid } from 'gridjs';
+  import { createApp } from 'vue';
+
+  createApp({
+    data() {
+      return {
+        isFamiliesLoading: false,
+        families: [],
+        selectedFamily: '',
+        recentAttendanceData: [],
+        hasRecentAttendanceData: false,
+        recentPaymentData: [],
+        hasrecentPaymentData: false,
+        upcomingClassesData: [],
+        hasUpcomingClassesData: false,
+        cols: ['Make', 'Model', 'Year', 'Color'],
+        rows: [
+          ['Ford', 'Fusion', '2011', 'Silver'],
+          ['Chevrolet', 'Cruz', '2018', 'White']
+        ]
+      };
+    },
+    created() {
+      // fetch on init
+      this.getFamilies();
+    },
+    methods: {
+      getFamilies() {
+        this.isFamiliesLoading = true;
+        google.script.run
+          .withSuccessHandler(families => {
+            this.isFamiliesLoading = false;
+            this.families = families;
+          })
+          .getFamilies();
+      },
+      getFamilyDetails() {
+        this.hasRecentAttendanceData = false;
+        this.hasRecentPaymentData = false;
+        this.hasUpcomingClassesData = false;
+
+        if (this.selectedFamily) {
+          google.script.run
+            .withFailureHandler(() => {
+              alert('Failed to get data');
+            })
+            .withSuccessHandler(recentAttendanceData => {
+              this.hasRecentAttendanceData = true;
+              new Grid({
+                columns: [
+                  {
+                    id: 'StudentName',
+                    name: 'Name',
+                  },
+                  {
+                    id: 'ClassDate',
+                    name: 'Date',
+                  },
+                  {
+                    id: 'ClassGroupName',
+                    name: 'Class',
+                  },
+                  {
+                    id: 'Price',
+                    name: 'Price',
+                  },
+                ],
+                pagination: {
+                  limit: 5,
+                },
+                data: Array.from(recentAttendanceData),
+              }).render(document.getElementById('recent-attendance-table'));
+            })
+            .getRecentAttendanceByFamily(this.selectedFamily);
+          google.script.run
+            .withFailureHandler(() => {
+              alert('Failed to get data');
+            })
+            .withSuccessHandler(recentPaymentsData => {
+              this.recentPaymentsData = recentPaymentsData;
+            })
+            .getRecentPaymentsByFamily(this.selectedFamily);
+          google.script.run
+            .withFailureHandler(() => {
+              alert('Failed to get data');
+            })
+            .withSuccessHandler(upcomingClassesData => {
+              this.upcomingClassesData = upcomingClassesData;
+            })
+            .getUpcomingClassesByFamily(this.selectedFamily);
+        }
+      },
+    },
+    template: document.getElementById('student-portal-template').innerHTML,
+  }).mount('#app');
+</script>
+
+<template id="student-portal-template">
+  <grid :cols="cols" :rows="rows"></grid>
+  <section class="family-selector-container">
+    <span v-if="isFamiliesLoading" class="loader"></span>
+    <div v-else class="family-selector-form spacer-30">
+      <div class="custom-select">
+        <select v-model="selectedFamily" @change="getFamilyDetails()">
+          <option disabled value="">Select student</option>
+          <option
+            v-for="family in families"
+            :key="family.FamilyId"
+            :value="family.FamilyId"
+          >
+            {{ family.FamilyName }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </section>
+  <section class="family-details-container" v-if="!!selectedFamily">
+    <div class="family-details__recent-attendance">
+      <h2>Recent Attendance</h2>
+      <span v-show="!hasRecentAttendanceData" class="loader"></span>
+      <div
+        id="recent-attendance-table"
+        class="family-details__recent-attendance-table"
+      ></div>
+    </div>
+    <div class="family-details__recent-payments"></div>
+    <div class="family-details__upcoming-classes"></div>
+    <div class="family-details__balance"></div>
+  </section>
+</template>
