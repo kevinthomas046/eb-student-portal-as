@@ -33,21 +33,71 @@ limitations under the License.
         families: [],
         selectedFamily: '',
         recentAttendanceData: [],
+        recentAttendanceGrid: null,
         hasRecentAttendanceData: false,
         recentPaymentData: [],
+        recentPaymentGrid: null,
         hasrecentPaymentData: false,
         upcomingClassesData: [],
+        upcomingClassesGrid: null,
         hasUpcomingClassesData: false,
-        cols: ['Make', 'Model', 'Year', 'Color'],
-        rows: [
-          ['Ford', 'Fusion', '2011', 'Silver'],
-          ['Chevrolet', 'Cruz', '2018', 'White'],
-        ],
       };
     },
     created() {
       // fetch on init
       this.getFamilies();
+    },
+    mounted() {
+      this.recentAttendanceGrid = new Grid({
+        columns: [
+          {
+            id: 'StudentName',
+            name: 'Name',
+          },
+          {
+            id: 'ClassDate',
+            name: 'Date',
+          },
+          {
+            id: 'ClassGroupName',
+            name: 'Class',
+          },
+          {
+            id: 'Price',
+            name: 'Price',
+          },
+        ],
+        data: [],
+        pagination: {
+          limit: 5,
+        },
+      }).render(document.getElementById('recent-attendance-table'));
+
+      this.recentPaymentGrid = new Grid({
+        columns: [
+          {
+            id: 'PaymentDate',
+            name: 'Date',
+          },
+          { id: 'AmountPaid', name: 'Amount' },
+        ],
+        data: [],
+        pagination: {
+          limit: 5,
+        },
+      }).render(document.getElementById('recent-payments-table'));
+
+      this.upcomingClassesGrid = new Grid({
+        columns: [
+          { id: 'ClassDate', name: 'Date' },
+          { id: 'ClassGroupName', name: 'Class' },
+          { id: 'Price', name: 'Price' },
+        ],
+        data: [],
+        pagination: {
+          limit: 5,
+        },
+      }).render(document.getElementById('upcoming-classes-table'));
     },
     methods: {
       getFamilies() {
@@ -65,78 +115,56 @@ limitations under the License.
         this.hasUpcomingClassesData = false;
 
         if (this.selectedFamily) {
-          google.script.run
-            .withFailureHandler(() => {
-              alert('Failed to get data');
+          this.recentAttendanceGrid
+            .updateConfig({
+              data: () => {
+                return new Promise(resolve => {
+                  google.script.run
+                    .withFailureHandler(() => {
+                      alert('Failed to get data');
+                    })
+                    .withSuccessHandler(recentAttendanceData => {
+                      resolve(Array.from(recentAttendanceData));
+                    })
+                    .getRecentAttendanceByFamily(this.selectedFamily);
+                });
+              },
             })
-            .withSuccessHandler(recentAttendanceData => {
-              this.hasRecentAttendanceData = true;
-              new Grid({
-                columns: [
-                  {
-                    id: 'StudentName',
-                    name: 'Name',
-                  },
-                  {
-                    id: 'ClassDate',
-                    name: 'Date',
-                  },
-                  {
-                    id: 'ClassGroupName',
-                    name: 'Class',
-                  },
-                  {
-                    id: 'Price',
-                    name: 'Price',
-                  },
-                ],
-                pagination: {
-                  limit: 5,
-                },
-                data: Array.from(recentAttendanceData),
-              }).render(document.getElementById('recent-attendance-table'));
+            .forceRender();
+
+          this.recentPaymentGrid
+            .updateConfig({
+              data: () => {
+                return new Promise(resolve => {
+                  google.script.run
+                    .withFailureHandler(() => {
+                      alert('Failed to get data');
+                    })
+                    .withSuccessHandler(recentPaymentsData => {
+                      resolve(Array.from(recentPaymentsData));
+                    })
+                    .getRecentPaymentsByFamily(this.selectedFamily);
+                });
+              },
             })
-            .getRecentAttendanceByFamily(this.selectedFamily);
-          google.script.run
-            .withFailureHandler(() => {
-              alert('Failed to get data');
+            .forceRender();
+
+          this.upcomingClassesGrid
+            .updateConfig({
+              data: () => {
+                return new Promise(resolve => {
+                  google.script.run
+                    .withFailureHandler(() => {
+                      alert('Failed to get data');
+                    })
+                    .withSuccessHandler(upcomingClassesData => {
+                      resolve(Array.from(upcomingClassesData));
+                    })
+                    .getUpcomingClassesByFamily(this.selectedFamily);
+                });
+              },
             })
-            .withSuccessHandler(recentPaymentsData => {
-              this.hasRecentPaymentData = true;
-              new Grid({
-                columns: [
-                  {
-                    id: 'PaymentDate',
-                    name: 'Date',
-                  },
-                  { id: 'AmountPaid', name: 'Amount' },
-                ],
-                pagination: {
-                  limit: 5,
-                },
-                data: Array.from(recentPaymentsData),
-              }).render(document.getElementById('recent-payments-table'));
-            })
-            .getRecentPaymentsByFamily(this.selectedFamily);
-          google.script.run
-            .withFailureHandler(() => {
-              alert('Failed to get data');
-            })
-            .withSuccessHandler(upcomingClassesData => {
-              this.hasUpcomingClassesData = true;
-              new Grid({
-                columns: [
-                  { id: 'ClassDate', name: 'Date' },
-                  { id: 'ClassGroupName', name: 'Class' },
-                  { id: 'Price', name: 'Price' },
-                ],
-                pagination: {
-                  limit: 5,
-                },
-                data: Array.from(upcomingClassesData),
-              }).render(document.getElementById('upcoming-classes-table'));
-            })
-            .getUpcomingClassesByFamily(this.selectedFamily);
+            .forceRender();
         }
       },
     },
@@ -145,7 +173,6 @@ limitations under the License.
 </script>
 
 <template id="student-portal-template">
-  <grid :cols="cols" :rows="rows"></grid>
   <section class="family-selector-container">
     <span v-if="isFamiliesLoading" class="loader"></span>
     <div v-else class="family-selector-form spacer-30">
@@ -163,20 +190,17 @@ limitations under the License.
       </div>
     </div>
   </section>
-  <section class="family-details-container" v-if="!!selectedFamily">
+  <section class="family-details-container">
     <div class="family-details__recent-attendance">
       <h2>Recent Attendance</h2>
-      <span v-show="!hasRecentAttendanceData" class="loader"></span>
       <div id="recent-attendance-table"></div>
     </div>
     <div class="family-details__recent-payments">
       <h2>Recent Payments</h2>
-      <span v-show="!hasRecentPaymentData" class="loader"></span>
       <div id="recent-payments-table"></div>
     </div>
     <div class="family-details__upcoming-classes">
       <h2>Upcoming Classes</h2>
-      <span v-show="!hasUpcomingClassesData" class="loader"></span>
       <div id="upcoming-classes-table"></div>
     </div>
     <div class="family-details__balance"></div>
