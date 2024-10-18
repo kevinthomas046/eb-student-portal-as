@@ -186,7 +186,7 @@ function getRecentPaymentsByFamily(familyId: string) {
 }
 
 /**
- * "Create a function to get a list of upcoming classes based on family ID selection.
+ * A function to get a list of upcoming classes based on family ID selection.
 Input: familyID
 Output: [{ classID, classDate, classGroupName, amount }]"
 
@@ -195,8 +195,6 @@ Output: [{ classID, classDate, classGroupName, amount }]"
 3. Get a list of classes from Class where
 classGroupID in array of classGroupIDs from step #2
 4. Join class & classGroup to get classID, classDate, classGroupName, (class.amount OR classGroup.amount)
-
-
  */
 function getUpcomingClassesByFamily(familyId: string) {
   // Get a list of students where familyID = input.familyID AND active = true
@@ -211,13 +209,14 @@ function getUpcomingClassesByFamily(familyId: string) {
     )
   );
 
-  console.log('Class groups for family', familyId, 'are', uniqueClassGroupIds);
+  console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
 
   // Get a list of classes from Class where classGroupID in array of classGroupIDs from uniqueClassGroupIds
   const classesData = getSheetByName(SHEETS.CLASSES).getDataRange().getValues();
   const classGroupsData = getSheetByName(SHEETS.CLASS_GROUPS)
     .getDataRange()
-    .getValues();
+    .getValues()
+    .filter(row => row[0] && row[1]);
   const today = new Date();
   const isUpcomingClass = (row: number[]): boolean => {
     const classDate = new Date(row[2]);
@@ -226,12 +225,17 @@ function getUpcomingClassesByFamily(familyId: string) {
   const upcomingClasses = classesData.slice(1).filter(isUpcomingClass);
 
   console.log('Upcoming classes for', familyId, upcomingClasses);
-  return upcomingClasses.map(row => ({
-    ClassId: row[0],
-    ClassDate: new Date(row[2]).toLocaleDateString(),
-    ClassGroupName: classGroupsData.slice(1)[row[1]][1], // get from ClassGroup sheet row[1]
-    Price: row[3] !== '' ? row[3] : classGroupsData.slice(1)[row[1]][2], // get from ClassGroup sheet row[1]
-  }));
+  return upcomingClasses.map(row => {
+    // Find the class group data where ClassGroupId matches row[1]
+    const classGroup = classGroupsData.find(group => group[0] === row[1]);
+
+    return {
+      ClassId: row[0],
+      ClassDate: new Date(row[2]).toLocaleDateString(),
+      ClassGroupName: classGroup ? classGroup[1] : null, // Get the ClassGroupName
+      Price: row[3] !== '' ? row[3] : classGroup ? classGroup[2] : null, // Get PricePerClass if row[3] is empty
+    };
+  });
 }
 
 function getAllData(familyId: string) {
