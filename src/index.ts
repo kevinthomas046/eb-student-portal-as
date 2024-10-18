@@ -153,16 +153,27 @@ function getRecentAttendanceByFamily(
         `Class group details not found for ClassGroupId: ${classDetails[1]}`
       );
 
+    // Determine the correct price in the following order: Attendance -> Class -> Class Group
+    const price =
+      attendance.Price || // Price from attendance record
+      classDetails[3] || // Price from class record
+      classGroupDetails[2]; // Price from class group record
+
     return {
       AttendanceId: attendance.AttendanceId,
       ClassDate: new Date(classDetails[2]).toLocaleDateString(),
       StudentName: attendance.StudentName || '',
       ClassGroupName: classGroupDetails[1],
-      Price: attendance.Price,
+      Price: price,
     } as RecentAttendance;
   });
 
-  console.log('Recent attendance of family', familyId, 'is', recentAttendance);
+  console.log(
+    'Recent attendance of family ',
+    familyId,
+    ' is ',
+    recentAttendance
+  );
 
   return recentAttendance;
 }
@@ -189,12 +200,6 @@ function getRecentPaymentsByFamily(familyId: string) {
  * A function to get a list of upcoming classes based on family ID selection.
 Input: familyID
 Output: [{ classID, classDate, classGroupName, amount }]"
-
- * 1. Get a list of students where familyID = input.familyID AND active = true
-2. From the list of students, get the unique list of class group IDs
-3. Get a list of classes from Class where
-classGroupID in array of classGroupIDs from step #2
-4. Join class & classGroup to get classID, classDate, classGroupName, (class.amount OR classGroup.amount)
  */
 function getUpcomingClassesByFamily(familyId: string) {
   // Get a list of students where familyID = input.familyID AND active = true
