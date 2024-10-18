@@ -86,7 +86,10 @@ function getSheetByName(sheetName: string): GoogleAppsScript.Spreadsheet.Sheet {
 function getFamilies(): Array<FamilyRecord> {
   const familiesSheet = getSheetByName(SHEETS.FAMILIES);
   const data = familiesSheet.getDataRange().getValues();
-  return data.slice(1).map(row => ({ FamilyId: row[0], FamilyName: row[1] }));
+  return data
+    .slice(1)
+    .filter(row => row[0] && row[1])
+    .map(row => ({ FamilyId: row[0], FamilyName: row[1] }));
 }
 
 /**
