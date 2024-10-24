@@ -176,6 +176,7 @@ limitations under the License.
   <section class="family-selector-container">
     <span v-if="isFamiliesLoading" class="loader"></span>
     <div v-else class="family-selector-form spacer-30">
+      <h2>Select student:</h2>
       <div class="custom-select">
         <select v-model="selectedFamily" @change="getFamilyDetails()">
           <option disabled value="">Select student</option>
