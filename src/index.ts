@@ -155,9 +155,14 @@ function getRecentAttendanceByFamily(
 
     // Determine the correct price in the following order: Attendance -> Class -> Class Group
     const price =
-      attendance.Price || // Price from attendance record
-      classDetails[3] || // Price from class record
-      classGroupDetails[2]; // Price from class group record
+      attendance.Price !== ''
+        ? attendance.Price // Price from attendance record
+        : classDetails[3] || // Price from class record
+          classGroupDetails[2]; // Price from class group record
+
+    console.log(
+      `Price for ${attendance.AttendanceId} is in this priority: ${attendance.Price}, ${classDetails[3]}, ${classGroupDetails[2]}`
+    );
 
     return {
       AttendanceId: attendance.AttendanceId,
