@@ -73,6 +73,31 @@ limitations under the License.
         },
       }).render(document.getElementById('recent-attendance-table'));
 
+      this.additionalFeesGrid = new Grid({
+        columns: [
+          {
+            id: 'studentName',
+            name: 'Student Name',
+          },
+          {
+            id: 'date',
+            name: 'Date',
+          },
+          {
+            id: 'notes',
+            name: 'Notes',
+          },
+          {
+            id: 'price',
+            name: 'Price',
+          },
+        ],
+        data: [],
+        pagination: {
+          limit: 5,
+        },
+      }).render(document.getElementById('additional-fees-table'));
+
       this.recentPaymentGrid = new Grid({
         columns: [
           {
@@ -114,55 +139,41 @@ limitations under the License.
         this.hasRecentPaymentData = false;
         this.hasUpcomingClassesData = false;
 
+        const getSheetData = async appScriptFunctionName => {
+          return new Promise((resolve, reject) => {
+            google.script.run
+              .withFailureHandler(() => {
+                reject('Failed to get data');
+              })
+              .withSuccessHandler(sheetData => {
+                resolve(Array.from(sheetData));
+              })
+              [appScriptFunctionName](this.selectedFamily);
+          });
+        };
+
         if (this.selectedFamily) {
           this.recentAttendanceGrid
             .updateConfig({
-              data: () => {
-                return new Promise(resolve => {
-                  google.script.run
-                    .withFailureHandler(() => {
-                      alert('Failed to get data');
-                    })
-                    .withSuccessHandler(recentAttendanceData => {
-                      resolve(Array.from(recentAttendanceData));
-                    })
-                    .getRecentAttendanceByFamily(this.selectedFamily);
-                });
-              },
+              data: () => getSheetData('getRecentAttendanceByFamily'),
+            })
+            .forceRender();
+
+          this.additionalFeesGrid
+            .updateConfig({
+              data: () => getSheetData('getAdditionalFees'),
             })
             .forceRender();
 
           this.recentPaymentGrid
             .updateConfig({
-              data: () => {
-                return new Promise(resolve => {
-                  google.script.run
-                    .withFailureHandler(() => {
-                      alert('Failed to get data');
-                    })
-                    .withSuccessHandler(recentPaymentsData => {
-                      resolve(Array.from(recentPaymentsData));
-                    })
-                    .getRecentPaymentsByFamily(this.selectedFamily);
-                });
-              },
+              data: () => getSheetData('getRecentPaymentsByFamily'),
             })
             .forceRender();
 
           this.upcomingClassesGrid
             .updateConfig({
-              data: () => {
-                return new Promise(resolve => {
-                  google.script.run
-                    .withFailureHandler(() => {
-                      alert('Failed to get data');
-                    })
-                    .withSuccessHandler(upcomingClassesData => {
-                      resolve(Array.from(upcomingClassesData));
-                    })
-                    .getUpcomingClassesByFamily(this.selectedFamily);
-                });
-              },
+              data: () => getSheetData('getUpcomingClassesByFamily'),
             })
             .forceRender();
         }
@@ -195,6 +206,10 @@ limitations under the License.
     <div class="family-details__recent-attendance">
       <h2>Recent Attendance</h2>
       <div id="recent-attendance-table"></div>
+    </div>
+    <div class="family-details__additional-fees">
+      <h2>Additional Fees</h2>
+      <div id="additional-fees-table"></div>
     </div>
     <div class="family-details__recent-payments">
       <h2>Recent Payments</h2>
