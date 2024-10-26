@@ -14,61 +14,89 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <style>
-    .custom-select {
-      min-width: 250px;
-      position: relative;
+  body {
+    font-family: 'Montserrat', sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    font-variation-settings: 'wdth' 100;
+  }
+
+  thead {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: 'wdth' 100;
+  }
+
+  .custom-select {
+    min-width: 250px;
+    position: relative;
+  }
+
+  .custom-select select {
+    appearance: none;
+    width: 100%;
+    font-size: 1.15rem;
+    padding: 0.675em 6em 0.675em 1em;
+    background-color: #fff;
+    border: 1px solid #caced1;
+    border-radius: 0.25rem;
+    color: #000;
+    cursor: pointer;
+  }
+
+  .custom-select::before,
+  .custom-select::after {
+    --size: 0.3rem;
+    content: '';
+    position: absolute;
+    right: 1rem;
+    pointer-events: none;
+  }
+
+  .custom-select::before {
+    border-left: var(--size) solid transparent;
+    border-right: var(--size) solid transparent;
+    border-bottom: var(--size) solid black;
+    top: 40%;
+  }
+
+  .custom-select::after {
+    border-left: var(--size) solid transparent;
+    border-right: var(--size) solid transparent;
+    border-top: var(--size) solid black;
+    top: 55%;
+  }
+
+  .loader {
+    animation: l1 1s linear infinite alternate;
+  }
+
+  .loader:before {
+    content: 'Loading...';
+  }
+
+  @keyframes l1 {
+    to {
+      opacity: 0;
     }
-  
-    .custom-select select {
-      appearance: none;
-      width: 100%;
-      font-size: 1.15rem;
-      padding: 0.675em 6em 0.675em 1em;
-      background-color: #fff;
-      border: 1px solid #caced1;
-      border-radius: 0.25rem;
-      color: #000;
-      cursor: pointer;
-    }
-  
-    .custom-select::before,
-    .custom-select::after {
-      --size: 0.3rem;
-      content: '';
-      position: absolute;
-      right: 1rem;
-      pointer-events: none;
-    }
-  
-    .custom-select::before {
-      border-left: var(--size) solid transparent;
-      border-right: var(--size) solid transparent;
-      border-bottom: var(--size) solid black;
-      top: 40%;
-    }
-  
-    .custom-select::after {
-      border-left: var(--size) solid transparent;
-      border-right: var(--size) solid transparent;
-      border-top: var(--size) solid black;
-      top: 55%;
-    }
-  
-    .loader {
-      animation: l1 1s linear infinite alternate;
-    }
-  
-    .loader:before {
-      content: 'Loading...';
-    }
-  
-    @keyframes l1 {
-      to {
-        opacity: 0;
-      }
-    }
-  
-    .spacer-30 {
-      margin-bottom: 30px;
-    }
-  </style>
+  }
+
+  .spacer-30 {
+    margin-bottom: 30px;
+  }
+</style>
