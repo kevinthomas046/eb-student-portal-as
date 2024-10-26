@@ -27,6 +27,12 @@ export interface RecentAttendance {
   Price: string;
 }
 
+export interface PaymentRecord {
+  PaymentId: string;
+  PaymentDate: string;
+  AmountPaid: number;
+}
+
 export interface StudentRecord {
   StudentId: string;
   StudentName: string;

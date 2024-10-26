@@ -19,6 +19,7 @@ import {
   StudentRecord,
   AttendanceRecord,
   AdditionalFeesRecord,
+  PaymentRecord,
 } from './types/types';
 
 const SPREADSHEET_ID: string =
@@ -204,7 +205,7 @@ function getRecentAttendanceByFamily(
 Input: familyID
 Output: [{ paymentID, paymentDate, paymentAmount }]"
 */
-function getRecentPaymentsByFamily(familyId: string) {
+function getRecentPaymentsByFamily(familyId: string): PaymentRecord[] {
   const paymentsData = getSheetByName(SHEETS.PAYMENTS);
   return paymentsData
     .slice(1)
@@ -295,6 +296,36 @@ function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
 
       return prev;
     }, []);
+}
+
+function getBalance(familyId: string): number {
+  let balance = 0;
+
+  const recentAttendance = getRecentAttendanceByFamily(familyId);
+  const recentPayments = getRecentPaymentsByFamily(familyId);
+  const additionalFees = getAdditionalFees(familyId);
+
+  const classFees = recentAttendance.reduce((classFees, attendance) => {
+    classFees += Number(attendance.Price);
+    return classFees;
+  }, 0);
+
+  const paymentTotal = recentPayments.reduce((paymentTotal, payment) => {
+    paymentTotal += Number(payment.AmountPaid);
+    return paymentTotal;
+  }, 0);
+
+  const additionalFeesTotal = additionalFees.reduce(
+    (additionalFeesTotal, additionalFee) => {
+      additionalFeesTotal += Number(additionalFee.price);
+      return additionalFeesTotal;
+    },
+    0
+  );
+
+  balance = classFees + additionalFeesTotal - paymentTotal;
+
+  return balance;
 }
 
 function getAllData(familyId: string) {
