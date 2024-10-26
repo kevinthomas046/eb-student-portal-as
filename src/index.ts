@@ -18,6 +18,7 @@ import {
   RecentAttendance,
   StudentRecord,
   AttendanceRecord,
+  AdditionalFeesRecord,
 } from './types/types';
 
 const SPREADSHEET_ID: string =
@@ -30,6 +31,7 @@ const SHEETS = {
   PAYMENTS: 'Payments',
   CLASSES: 'Classes',
   CLASS_GROUPS: 'ClassGroups',
+  ADDITIONAL_FEES: 'AdditionalFees',
 };
 
 /**
@@ -248,10 +250,49 @@ function getUpcomingClassesByFamily(familyId: string) {
   });
 }
 
+function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
+  // get all students that belong to a particular family using familyId
+  const studentsSheet = getSheetByName(SHEETS.STUDENTS);
+  const studentsData = studentsSheet.getDataRange().getValues();
+
+  console.log('Getting attendance for family', familyId);
+
+  const studentsInFamily: StudentRecord[] = studentsData
+    .slice(1)
+    .filter(row => row[2] === familyId)
+    .map(row => ({ StudentId: row[0], StudentName: row[1] }));
+
+  console.log('Students in family', familyId, 'are', studentsInFamily);
+
+  // get attendance for each student in the family
+  const additionalFeesSheet = getSheetByName(SHEETS.ADDITIONAL_FEES);
+  const additionalFeesData = additionalFeesSheet.getDataRange().getValues();
+
+  return additionalFeesData
+    .slice(1)
+    .reduce((prev, [feeId, studentId, date, notes, price]) => {
+      const student = studentsInFamily.find(s => s.StudentId === studentId);
+
+      if (student) {
+        prev.push({
+          feeId,
+          studentId,
+          studentName: student.StudentName,
+          date: new Date(date).toLocaleDateString(),
+          notes,
+          price,
+        });
+      }
+
+      return prev;
+    }, []);
+}
+
 function getAllData(familyId: string) {
   return {
     recentAttendance: getRecentAttendanceByFamily(familyId),
     recentPayments: getRecentPaymentsByFamily(familyId),
     upcomingClasses: getUpcomingClassesByFamily(familyId),
+    additionalFees: getAdditionalFees(familyId),
   };
 }

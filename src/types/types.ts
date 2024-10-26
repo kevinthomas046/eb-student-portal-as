@@ -38,3 +38,12 @@ export interface AttendanceRecord {
   StudentName: string | undefined;
   Price: string;
 }
+
+export interface AdditionalFeesRecord {
+  feeId: string;
+  studentId: string;
+  studentName: string;
+  date: string;
+  notes: string;
+  price: number;
+}
