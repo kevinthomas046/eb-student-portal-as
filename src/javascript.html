@@ -240,18 +240,13 @@ limitations under the License.
         <div v-if="balance <= 0">
           <h4>You have a credit of: {{ formattedBalance }}</h4>
           <p class="balance-note">
-            A negative balance reflects a credit on your account. Please ensure
-            that this credit is sufficient to cover the remaining classes for
-            the month. If additional payment is needed, kindly settle the
-            outstanding balance at your earliest convenience.
+            A negative balance reflects a credit on your account. This balance will carry over into next month.
           </p>
         </div>
         <div v-if="balance > 0">
           <h4>You have a balance due of: {{ formattedBalance }}</h4>
           <p class="balance-note">
-            Kindly settle this balance at your earliest convenience. If there
-            are any upcoming classes this month not yet covered, please include
-            the corresponding amount in your payment.
+            This balance covers the remaining classes for this month. Please settle it at your earliest convenience. If you anticipate missing any upcoming classes, kindly adjust your payment accordingly and inform us of your absence in advance.
           </p>
         </div>
       </div>

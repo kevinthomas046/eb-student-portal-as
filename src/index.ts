@@ -300,10 +300,12 @@ function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
 
 function getBalance(familyId: string): number {
   let balance = 0;
+  const currentMonth = new Date().getMonth();
 
   const recentAttendance = getRecentAttendanceByFamily(familyId);
   const recentPayments = getRecentPaymentsByFamily(familyId);
   const additionalFees = getAdditionalFees(familyId);
+  const upcomingClasses = getUpcomingClassesByFamily(familyId);
 
   const classFees = recentAttendance.reduce((classFees, attendance) => {
     classFees += Number(attendance.Price);
@@ -323,7 +325,22 @@ function getBalance(familyId: string): number {
     0
   );
 
-  balance = classFees + additionalFeesTotal - paymentTotal;
+  const currentMonthRemainingClassesTotal = upcomingClasses.reduce(
+    (total, upcomingClass) => {
+      if (new Date(upcomingClass.ClassDate).getMonth() === currentMonth) {
+        total += Number(upcomingClass.Price);
+      }
+
+      return total;
+    },
+    0
+  );
+
+  balance =
+    classFees +
+    additionalFeesTotal +
+    currentMonthRemainingClassesTotal -
+    paymentTotal;
 
   return balance;
 }
