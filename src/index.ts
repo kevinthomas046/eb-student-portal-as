@@ -156,39 +156,43 @@ function getRecentAttendanceByFamily(
   const classData = getSheetByName(SHEETS.CLASSES);
   const classGroupData = getSheetByName(SHEETS.CLASS_GROUPS);
 
-  const recentAttendance = attendanceInFamily.map(attendance => {
-    const classDetails = classData.find(row => row[0] === attendance.ClassId);
-    if (!classDetails)
-      throw new Error(
-        `Class details not found for ClassId: ${attendance.ClassId}`
+  const recentAttendance = attendanceInFamily
+    .map(attendance => {
+      const classDetails = classData.find(row => row[0] === attendance.ClassId);
+      if (!classDetails)
+        throw new Error(
+          `Class details not found for ClassId: ${attendance.ClassId}`
+        );
+      const classGroupDetails = classGroupData.find(
+        row => row[0] === classDetails[1]
       );
-    const classGroupDetails = classGroupData.find(
-      row => row[0] === classDetails[1]
-    );
-    if (!classGroupDetails)
-      throw new Error(
-        `Class group details not found for ClassGroupId: ${classDetails[1]}`
+      if (!classGroupDetails)
+        throw new Error(
+          `Class group details not found for ClassGroupId: ${classDetails[1]}`
+        );
+
+      // Determine the correct price in the following order: Attendance -> Class -> Class Group
+      const price =
+        attendance.Price !== ''
+          ? attendance.Price // Price from attendance record
+          : classDetails[3] || // Price from class record
+            classGroupDetails[2]; // Price from class group record
+
+      console.log(
+        `Price for ${attendance.AttendanceId} is in this priority: ${attendance.Price}, ${classDetails[3]}, ${classGroupDetails[2]}`
       );
 
-    // Determine the correct price in the following order: Attendance -> Class -> Class Group
-    const price =
-      attendance.Price !== ''
-        ? attendance.Price // Price from attendance record
-        : classDetails[3] || // Price from class record
-          classGroupDetails[2]; // Price from class group record
-
-    console.log(
-      `Price for ${attendance.AttendanceId} is in this priority: ${attendance.Price}, ${classDetails[3]}, ${classGroupDetails[2]}`
-    );
-
-    return {
-      AttendanceId: attendance.AttendanceId,
-      ClassDate: new Date(classDetails[2]).toLocaleDateString(),
-      StudentName: attendance.StudentName || '',
-      ClassGroupName: classGroupDetails[1],
-      Price: price,
-    } as RecentAttendance;
-  });
+      return {
+        AttendanceId: attendance.AttendanceId,
+        ClassDate: new Date(classDetails[2]).toLocaleDateString(),
+        StudentName: attendance.StudentName || '',
+        ClassGroupName: classGroupDetails[1],
+        Price: price,
+      } as RecentAttendance;
+    })
+    .sort(({ ClassDate: classDateA }, { ClassDate: classDateB }) => {
+      return Date.parse(classDateB) - Date.parse(classDateA);
+    });
 
   console.log(
     'Recent attendance of family ',
@@ -214,7 +218,10 @@ function getRecentPaymentsByFamily(familyId: string): PaymentRecord[] {
       PaymentId: row[0],
       PaymentDate: new Date(row[2]).toLocaleDateString(),
       AmountPaid: row[3],
-    }));
+    }))
+    .sort(({ PaymentDate: classDateA }, { PaymentDate: classDateB }) => {
+      return Date.parse(classDateB) - Date.parse(classDateA);
+    });
 }
 
 /**
@@ -280,22 +287,31 @@ function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
 
   return additionalFeesData
     .slice(1)
-    .reduce((prev, [feeId, studentId, date, notes, price]) => {
-      const student = studentsInFamily.find(s => s.StudentId === studentId);
+    .reduce(
+      (
+        prev: AdditionalFeesRecord[],
+        [feeId, studentId, date, notes, price]
+      ) => {
+        const student = studentsInFamily.find(s => s.StudentId === studentId);
 
-      if (student) {
-        prev.push({
-          feeId,
-          studentId,
-          studentName: student.StudentName,
-          date: new Date(date).toLocaleDateString(),
-          notes,
-          price,
-        });
-      }
+        if (student) {
+          prev.push({
+            feeId,
+            studentId,
+            studentName: student.StudentName,
+            date: new Date(date).toLocaleDateString(),
+            notes,
+            price,
+          });
+        }
 
-      return prev;
-    }, []);
+        return prev;
+      },
+      []
+    )
+    .sort(({ date: classDateA }, { date: classDateB }) => {
+      return Date.parse(classDateB) - Date.parse(classDateA);
+    });
 }
 
 function getBalance(familyId: string): number {
