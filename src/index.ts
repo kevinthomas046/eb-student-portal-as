@@ -248,9 +248,9 @@ function getUpcomingClassesByFamily(familyId: string) {
   const classGroupsData = getSheetByName(SHEETS.CLASS_GROUPS).filter(
     row => row[0] && row[1]
   );
-  const today = new Date();
+  const today = Date.parse(new Date().toLocaleDateString());
   const isUpcomingClass = (row: number[]): boolean => {
-    const classDate = new Date(row[2]);
+    const classDate = Date.parse(new Date(row[2]).toLocaleDateString());
     return uniqueClassGroupIds.includes(row[1]) && classDate >= today;
   };
   const upcomingClasses = classesData.slice(1).filter(isUpcomingClass);
