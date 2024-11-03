@@ -222,6 +222,23 @@ limitations under the License.
     </div>
   </section>
   <section class="family-details-container">
+    <div v-show="hasBalanceData">
+      <div class="family-details__balance">
+        <h2>Balance Info</h2>
+        <div v-if="balance <= 0">
+          <h4>You have a credit of: {{ formattedBalance }}</h4>
+          <small class="balance-note">
+            A negative balance reflects a credit on your account. This balance will carry over into next month.
+          </small>
+        </div>
+        <div v-if="balance > 0">
+          <h4>You have a balance due of: {{ formattedBalance }}</h4>
+          <small class="balance-note">
+            This balance covers the remaining classes for this month. Please settle it at your earliest convenience. If you anticipate missing any upcoming classes, kindly adjust your payment accordingly and inform us of your absence in advance.
+          </small>
+        </div>
+      </div>
+    </div>
     <div class="family-details__recent-attendance">
       <h2>Recent Attendance</h2>
       <div id="recent-attendance-table"></div>
@@ -234,26 +251,9 @@ limitations under the License.
       <h2>Recent Payments</h2>
       <div id="recent-payments-table"></div>
     </div>
-    <div v-show="hasBalanceData">
-      <div class="family-details__balance">
-        <h2>Balance Info</h2>
-        <div v-if="balance <= 0">
-          <h4>You have a credit of: {{ formattedBalance }}</h4>
-          <p class="balance-note">
-            A negative balance reflects a credit on your account. This balance will carry over into next month.
-          </p>
-        </div>
-        <div v-if="balance > 0">
-          <h4>You have a balance due of: {{ formattedBalance }}</h4>
-          <p class="balance-note">
-            This balance covers the remaining classes for this month. Please settle it at your earliest convenience. If you anticipate missing any upcoming classes, kindly adjust your payment accordingly and inform us of your absence in advance.
-          </p>
-        </div>
-      </div>
-      <div class="family-details__upcoming-classes">
-        <h2>Upcoming Classes</h2>
-        <div id="upcoming-classes-table"></div>
-      </div>
+    <div class="family-details__upcoming-classes">
+      <h2>Upcoming Classes</h2>
+      <div id="upcoming-classes-table"></div>
     </div>
   </section>
 </template>
