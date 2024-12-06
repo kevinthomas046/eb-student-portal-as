@@ -110,7 +110,21 @@ function getFamilies(): Array<FamilyRecord> {
   return familiesData
     .slice(1)
     .filter(row => row[0] && row[1])
-    .map(row => ({ FamilyId: row[0], FamilyName: row[1] }));
+    .map(row => ({ FamilyId: row[0], FamilyName: row[1] }))
+    .sort((familyA, familyB) => {
+      const familyNameA = familyA.FamilyName.toUpperCase();
+      const familyNameB = familyB.FamilyName.toUpperCase();
+
+      if (familyNameA < familyNameB) {
+        return -1;
+      }
+
+      if (familyNameA > familyNameB) {
+        return 1;
+      }
+
+      return 0;
+    });
 }
 
 /**
