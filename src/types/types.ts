@@ -53,3 +53,52 @@ export interface AdditionalFeesRecord {
   notes: string;
   price: number;
 }
+
+export type Sheet =
+  | 'Families'
+  | 'Students'
+  | 'Attendance'
+  | 'Payments'
+  | 'Classes'
+  | 'ClassGroups'
+  | 'AdditionalFees';
+
+export type FamilyEntry = [FamilyId: number, FamilyName: string];
+export type StudentEntry = [
+  StudentId: number,
+  StudentName: string,
+  FamilyId: number,
+  ClassGroupId: number,
+  Active: boolean,
+];
+export type AdditionalFeesEntry = [
+  FeeID: number,
+  StudentID: number,
+  Date: string,
+  Notes: string,
+  Price: number,
+];
+export type AttendanceEntry = [
+  AttendanceId: number,
+  StudentId: number,
+  ClassId: number,
+  Notes: string,
+  Price: number,
+];
+export type ClassEntry = [
+  ClassId: number,
+  ClassGroupId: number,
+  Date: string,
+  Price: number,
+];
+export type PaymentEntry = [
+  PaymentId: number,
+  FamilyId: number,
+  PaymentDate: string,
+  AmountPaid: number,
+];
+export type ClassGroupEntry = [
+  ClassGroupId: number,
+  ClassGroupName: string,
+  PricePerClass: number,
+];

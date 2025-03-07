@@ -20,20 +20,12 @@ import {
   AttendanceRecord,
   AdditionalFeesRecord,
   PaymentRecord,
+  Sheet,
+  FamilyEntry,
 } from './types/types';
 
 const SPREADSHEET_ID: string =
   PropertiesService.getScriptProperties().getProperty('SHEET_ID') || '';
-
-const SHEETS = {
-  FAMILIES: 'Families',
-  STUDENTS: 'Students',
-  ATTENDANCE: 'Attendance',
-  PAYMENTS: 'Payments',
-  CLASSES: 'Classes',
-  CLASS_GROUPS: 'ClassGroups',
-  ADDITIONAL_FEES: 'AdditionalFees',
-};
 
 /**
  * Special function that handles HTTP GET requests to the published web app.
@@ -71,9 +63,9 @@ function include(filename: string) {
  * Retrieves a reference to a Google sheet by name.
  * @param {string} sheetName Name of the sheet to retrieve
  */
-function getSheetByName(
-  sheetName: string
-): ReturnType<GoogleAppsScript.Spreadsheet.Range['getValues']> {
+function getSheetByName<SheetEntryType>(
+  sheetName: Sheet
+): Array<SheetEntryType> {
   const cache = CacheService.getDocumentCache();
   const cachedSheetData = cache?.get(sheetName) ?? '';
 
@@ -96,7 +88,7 @@ function getSheetByName(
   const sheetData = sheet.getDataRange().getValues();
   cache?.put(sheetName, JSON.stringify(sheetData), 60);
 
-  return sheetData;
+  return sheetData as Array<SheetEntryType>;
 }
 
 /**
@@ -105,12 +97,15 @@ function getSheetByName(
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 function getFamilies(): Array<FamilyRecord> {
-  const familiesData = getSheetByName(SHEETS.FAMILIES);
+  const familiesData = getSheetByName<FamilyEntry>('Families');
 
   return familiesData
     .slice(1)
     .filter(row => row[0] && row[1])
-    .map(row => ({ FamilyId: row[0], FamilyName: row[1] }))
+    .map(
+      row =>
+        ({ FamilyId: row[0].toString(), FamilyName: row[1] }) as FamilyRecord
+    )
     .sort((familyA, familyB) => {
       const familyNameA = familyA.FamilyName.toUpperCase();
       const familyNameB = familyB.FamilyName.toUpperCase();
@@ -136,7 +131,7 @@ function getRecentAttendanceByFamily(
   familyId: string
 ): Array<RecentAttendance> {
   // get all students that belong to a particular family using familyId
-  const studentsData = getSheetByName(SHEETS.STUDENTS);
+  const studentsData = getSheetByName('Students');
 
   console.log('Getting attendance for family', familyId);
 
@@ -148,7 +143,7 @@ function getRecentAttendanceByFamily(
   console.log('Students in family', familyId, 'are', studentsInFamily);
 
   // get attendance for each student in the family
-  const attendanceData = getSheetByName(SHEETS.ATTENDANCE);
+  const attendanceData = getSheetByName('Attendance');
 
   const attendanceInFamily: AttendanceRecord[] = attendanceData
     .slice(1)
@@ -167,8 +162,8 @@ function getRecentAttendanceByFamily(
   console.log('Attendance In Family', attendanceInFamily);
 
   // get class details for each attendance
-  const classData = getSheetByName(SHEETS.CLASSES);
-  const classGroupData = getSheetByName(SHEETS.CLASS_GROUPS);
+  const classData = getSheetByName('Classes');
+  const classGroupData = getSheetByName('ClassGroups');
 
   const recentAttendance = attendanceInFamily
     .map(attendance => {
@@ -224,7 +219,7 @@ Input: familyID
 Output: [{ paymentID, paymentDate, paymentAmount }]"
 */
 function getRecentPaymentsByFamily(familyId: string): PaymentRecord[] {
-  const paymentsData = getSheetByName(SHEETS.PAYMENTS);
+  const paymentsData = getSheetByName('Payments');
   return paymentsData
     .slice(1)
     .filter(row => row[1] === familyId)
@@ -245,7 +240,7 @@ Output: [{ classID, classDate, classGroupName, amount }]"
  */
 function getUpcomingClassesByFamily(familyId: string) {
   // Get a list of students where familyID = input.familyID AND active = true
-  const studentsData = getSheetByName(SHEETS.STUDENTS);
+  const studentsData = getSheetByName('Students');
   const uniqueClassGroupIds: number[] = Array.from(
     new Set(
       studentsData
@@ -258,8 +253,8 @@ function getUpcomingClassesByFamily(familyId: string) {
   console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
 
   // Get a list of classes from Class where classGroupID in array of classGroupIDs from uniqueClassGroupIds
-  const classesData = getSheetByName(SHEETS.CLASSES);
-  const classGroupsData = getSheetByName(SHEETS.CLASS_GROUPS).filter(
+  const classesData = getSheetByName('Classes');
+  const classGroupsData = getSheetByName('ClassGroups').filter(
     row => row[0] && row[1]
   );
   const today = Date.parse(new Date().toLocaleDateString());
@@ -285,7 +280,7 @@ function getUpcomingClassesByFamily(familyId: string) {
 
 function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
   // get all students that belong to a particular family using familyId
-  const studentsData = getSheetByName(SHEETS.STUDENTS);
+  const studentsData = getSheetByName('Students');
 
   console.log('Getting attendance for family', familyId);
 
@@ -297,7 +292,7 @@ function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
   console.log('Students in family', familyId, 'are', studentsInFamily);
 
   // get attendance for each student in the family
-  const additionalFeesData = getSheetByName(SHEETS.ADDITIONAL_FEES);
+  const additionalFeesData = getSheetByName('AdditionalFees');
 
   return additionalFeesData
     .slice(1)
