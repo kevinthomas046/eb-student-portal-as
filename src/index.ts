@@ -108,10 +108,7 @@ function getFamilies(): Array<FamilyRecord> {
   return familiesData
     .slice(1)
     .filter(row => row[0] && row[1])
-    .map(
-      row =>
-        ({ FamilyId: row[0], FamilyName: row[1] }) as FamilyRecord
-    )
+    .map(row => ({ FamilyId: row[0], FamilyName: row[1] }) as FamilyRecord)
     .sort((familyA, familyB) => {
       const familyNameA = familyA.FamilyName.toUpperCase();
       const familyNameB = familyB.FamilyName.toUpperCase();
@@ -279,7 +276,7 @@ function getUpcomingClassesByFamily(familyId: number) {
       ClassId: row[0],
       ClassDate: new Date(row[2]).toLocaleDateString(),
       ClassGroupName: classGroup ? classGroup[1] : null, // Get the ClassGroupName
-      Price: !!row[3] ? row[3] : classGroup ? classGroup[2] : null, // Get PricePerClass if row[3] is empty
+      Price: row[3] ? row[3] : classGroup ? classGroup[2] : null, // Get PricePerClass if row[3] is empty
     };
   });
 }
@@ -298,7 +295,8 @@ function getAdditionalFees(familyId: number): AdditionalFeesRecord[] {
   console.log('Students in family', familyId, 'are', studentsInFamily);
 
   // get attendance for each student in the family
-  const additionalFeesData = getSheetByName<AdditionalFeesEntry>('AdditionalFees');
+  const additionalFeesData =
+    getSheetByName<AdditionalFeesEntry>('AdditionalFees');
 
   return additionalFeesData
     .slice(1)
