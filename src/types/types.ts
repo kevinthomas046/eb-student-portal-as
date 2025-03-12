@@ -15,12 +15,12 @@
  */
 // types.ts
 export interface FamilyRecord {
-  FamilyId: string;
+  FamilyId: number;
   FamilyName: string;
 }
 
 export interface RecentAttendance {
-  AttendanceId: string;
+  AttendanceId: number;
   ClassDate: string;
   StudentName: string;
   ClassGroupName: string;
@@ -28,26 +28,26 @@ export interface RecentAttendance {
 }
 
 export interface PaymentRecord {
-  PaymentId: string;
+  PaymentId: number;
   PaymentDate: string;
   AmountPaid: number;
 }
 
 export interface StudentRecord {
-  StudentId: string;
+  StudentId: number;
   StudentName: string;
 }
 
 export interface AttendanceRecord {
-  AttendanceId: string;
-  ClassId: string;
+  AttendanceId: number;
+  ClassId: number;
   StudentName: string | undefined;
   Price: string;
 }
 
 export interface AdditionalFeesRecord {
-  feeId: string;
-  studentId: string;
+  feeId: number;
+  studentId: number;
   studentName: string;
   date: string;
   notes: string;
@@ -63,42 +63,43 @@ export type Sheet =
   | 'ClassGroups'
   | 'AdditionalFees';
 
-export type FamilyEntry = [FamilyId: number, FamilyName: string];
+export type FamilyEntry = [familyId: number, FamilyName: string];
 export type StudentEntry = [
-  StudentId: number,
+  studentId: number,
   StudentName: string,
-  FamilyId: number,
-  ClassGroupId: number,
+  familyId: number,
+  classGroupId: number,
   Active: boolean,
 ];
 export type AdditionalFeesEntry = [
-  FeeID: number,
-  StudentID: number,
+  feeID: number,
+  studentID: number,
   Date: string,
   Notes: string,
   Price: number,
 ];
 export type AttendanceEntry = [
-  AttendanceId: number,
-  StudentId: number,
-  ClassId: number,
+  attendanceId: number,
+  studentId: number,
+  classId: number,
   Notes: string,
   Price: number,
 ];
 export type ClassEntry = [
-  ClassId: number,
-  ClassGroupId: number,
+  classId: number,
+  classGroupId: number,
   Date: string,
   Price: number,
 ];
 export type PaymentEntry = [
-  PaymentId: number,
-  FamilyId: number,
+  paymentId: number,
+  familyId: number,
   PaymentDate: string,
-  AmountPaid: number,
+  amountPaid: number,
 ];
 export type ClassGroupEntry = [
-  ClassGroupId: number,
+  classGroupId: number,
   ClassGroupName: string,
   PricePerClass: number,
 ];
+  

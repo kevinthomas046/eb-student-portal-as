@@ -23,6 +23,11 @@ import {
   Sheet,
   FamilyEntry,
   StudentEntry,
+  AttendanceEntry,
+  ClassEntry,
+  ClassGroupEntry,
+  PaymentEntry,
+  AdditionalFeesEntry,
 } from './types/types';
 
 const SPREADSHEET_ID: string =
@@ -105,7 +110,7 @@ function getFamilies(): Array<FamilyRecord> {
     .filter(row => row[0] && row[1])
     .map(
       row =>
-        ({ FamilyId: row[0].toString(), FamilyName: row[1] }) as FamilyRecord
+        ({ FamilyId: row[0], FamilyName: row[1] }) as FamilyRecord
     )
     .sort((familyA, familyB) => {
       const familyNameA = familyA.FamilyName.toUpperCase();
@@ -125,11 +130,11 @@ function getFamilies(): Array<FamilyRecord> {
 
 /**
  * Retrieves a list of recent student attendence for a given familiy
- * @param {string} familyId ID of the family to retrieve recent attendance for
+ * @param {number} familyId ID of the family to retrieve recent attendance for
  * @returns {Array<RecentAttendance>} Array of objects containing family IDs and names.
  */
 function getRecentAttendanceByFamily(
-  familyId: string
+  familyId: number
 ): Array<RecentAttendance> {
   // get all students that belong to a particular family using familyId
   const studentsData = getSheetByName<StudentEntry>('Students');
@@ -139,12 +144,12 @@ function getRecentAttendanceByFamily(
   const studentsInFamily: StudentRecord[] = studentsData
     .slice(1)
     .filter(row => row[2] === familyId)
-    .map(row => ({ StudentId: row[0].toString(), StudentName: row[1] }));
+    .map(row => ({ StudentId: row[0], StudentName: row[1] }));
 
   console.log('Students in family', familyId, 'are', studentsInFamily);
 
   // get attendance for each student in the family
-  const attendanceData = getSheetByName('Attendance');
+  const attendanceData = getSheetByName<AttendanceEntry>('Attendance');
 
   const attendanceInFamily: AttendanceRecord[] = attendanceData
     .slice(1)
@@ -157,14 +162,14 @@ function getRecentAttendanceByFamily(
       StudentName: studentsInFamily.find(
         student => student.StudentId === row[1]
       )?.StudentName,
-      Price: row[4],
+      Price: row[4].toString(),
     }));
 
   console.log('Attendance In Family', attendanceInFamily);
 
   // get class details for each attendance
-  const classData = getSheetByName('Classes');
-  const classGroupData = getSheetByName('ClassGroups');
+  const classData = getSheetByName<ClassEntry>('Classes');
+  const classGroupData = getSheetByName<ClassGroupEntry>('ClassGroups');
 
   const recentAttendance = attendanceInFamily
     .map(attendance => {
@@ -219,8 +224,8 @@ function getRecentAttendanceByFamily(
 Input: familyID
 Output: [{ paymentID, paymentDate, paymentAmount }]"
 */
-function getRecentPaymentsByFamily(familyId: string): PaymentRecord[] {
-  const paymentsData = getSheetByName('Payments');
+function getRecentPaymentsByFamily(familyId: number): PaymentRecord[] {
+  const paymentsData = getSheetByName<PaymentEntry>('Payments');
   return paymentsData
     .slice(1)
     .filter(row => row[1] === familyId)
@@ -239,9 +244,9 @@ function getRecentPaymentsByFamily(familyId: string): PaymentRecord[] {
 Input: familyID
 Output: [{ classID, classDate, classGroupName, amount }]"
  */
-function getUpcomingClassesByFamily(familyId: string) {
+function getUpcomingClassesByFamily(familyId: number) {
   // Get a list of students where familyID = input.familyID AND active = true
-  const studentsData = getSheetByName('Students');
+  const studentsData = getSheetByName<StudentEntry>('Students');
   const uniqueClassGroupIds: number[] = Array.from(
     new Set(
       studentsData
@@ -254,12 +259,12 @@ function getUpcomingClassesByFamily(familyId: string) {
   console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
 
   // Get a list of classes from Class where classGroupID in array of classGroupIDs from uniqueClassGroupIds
-  const classesData = getSheetByName('Classes');
-  const classGroupsData = getSheetByName('ClassGroups').filter(
+  const classesData = getSheetByName<ClassEntry>('Classes');
+  const classGroupsData = getSheetByName<ClassGroupEntry>('ClassGroups').filter(
     row => row[0] && row[1]
   );
   const today = Date.parse(new Date().toLocaleDateString());
-  const isUpcomingClass = (row: number[]): boolean => {
+  const isUpcomingClass = (row: ClassEntry): boolean => {
     const classDate = Date.parse(new Date(row[2]).toLocaleDateString());
     return uniqueClassGroupIds.includes(row[1]) && classDate >= today;
   };
@@ -274,14 +279,14 @@ function getUpcomingClassesByFamily(familyId: string) {
       ClassId: row[0],
       ClassDate: new Date(row[2]).toLocaleDateString(),
       ClassGroupName: classGroup ? classGroup[1] : null, // Get the ClassGroupName
-      Price: row[3] !== '' ? row[3] : classGroup ? classGroup[2] : null, // Get PricePerClass if row[3] is empty
+      Price: !!row[3] ? row[3] : classGroup ? classGroup[2] : null, // Get PricePerClass if row[3] is empty
     };
   });
 }
 
-function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
+function getAdditionalFees(familyId: number): AdditionalFeesRecord[] {
   // get all students that belong to a particular family using familyId
-  const studentsData = getSheetByName('Students');
+  const studentsData = getSheetByName<StudentEntry>('Students');
 
   console.log('Getting attendance for family', familyId);
 
@@ -293,7 +298,7 @@ function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
   console.log('Students in family', familyId, 'are', studentsInFamily);
 
   // get attendance for each student in the family
-  const additionalFeesData = getSheetByName('AdditionalFees');
+  const additionalFeesData = getSheetByName<AdditionalFeesEntry>('AdditionalFees');
 
   return additionalFeesData
     .slice(1)
@@ -324,7 +329,7 @@ function getAdditionalFees(familyId: string): AdditionalFeesRecord[] {
     });
 }
 
-function getBalance(familyId: string): number {
+function getBalance(familyId: number): number {
   let balance = 0;
   const currentMonth = new Date().getMonth();
 
@@ -371,7 +376,7 @@ function getBalance(familyId: string): number {
   return balance;
 }
 
-function getAllData(familyId: string) {
+function getAllData(familyId: number) {
   return {
     recentAttendance: getRecentAttendanceByFamily(familyId),
     recentPayments: getRecentPaymentsByFamily(familyId),
