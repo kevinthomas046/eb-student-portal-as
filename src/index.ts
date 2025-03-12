@@ -22,6 +22,7 @@ import {
   PaymentRecord,
   Sheet,
   FamilyEntry,
+  StudentEntry,
 } from './types/types';
 
 const SPREADSHEET_ID: string =
@@ -131,14 +132,14 @@ function getRecentAttendanceByFamily(
   familyId: string
 ): Array<RecentAttendance> {
   // get all students that belong to a particular family using familyId
-  const studentsData = getSheetByName('Students');
+  const studentsData = getSheetByName<StudentEntry>('Students');
 
   console.log('Getting attendance for family', familyId);
 
   const studentsInFamily: StudentRecord[] = studentsData
     .slice(1)
     .filter(row => row[2] === familyId)
-    .map(row => ({ StudentId: row[0], StudentName: row[1] }));
+    .map(row => ({ StudentId: row[0].toString(), StudentName: row[1] }));
 
   console.log('Students in family', familyId, 'are', studentsInFamily);
 
