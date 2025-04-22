@@ -248,8 +248,9 @@ function getUpcomingClassesByFamily(familyId: number) {
     new Set(
       studentsData
         .slice(1)
-        .filter(row => row[2] === familyId && row[4] === true)
-        .map(row => row[3])
+        .filter(row => row[2] === familyId && row[5] === true)
+        .map(row => [row[3], row[4]])
+        .flat()
     )
   );
 
