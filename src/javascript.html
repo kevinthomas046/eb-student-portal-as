@@ -29,9 +29,12 @@ limitations under the License.
   createApp({
     data() {
       return {
+        FEE_BY_MONTH_FLAG: true,
         isFamiliesLoading: false,
         families: [],
         selectedFamily: '',
+        feeByMonthData: [],
+        feeByMonthGrid: null,
         recentAttendanceData: [],
         recentAttendanceGrid: null,
         hasRecentAttendanceData: false,
@@ -58,7 +61,34 @@ limitations under the License.
       this.getFamilies();
     },
     mounted() {
+      this.feeByMonthGrid = new Grid({
+        className: {
+          table: 'eb-table',
+          th: 'eb-table__th',
+        },
+        columns: [
+          {
+            id: 'month',
+            name: 'Month',
+          },
+          {
+            name: 'Fees',
+            data: row =>
+              new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0,
+              }).format(row.fees),
+          },
+        ],
+        data: [],
+      }).render(document.getElementById('fee-by-month-table'));
+
       this.recentAttendanceGrid = new Grid({
+        className: {
+          table: 'eb-table',
+          th: 'eb-table__th',
+        },
         columns: [
           {
             id: 'StudentName',
@@ -84,6 +114,10 @@ limitations under the License.
       }).render(document.getElementById('recent-attendance-table'));
 
       this.additionalFeesGrid = new Grid({
+        className: {
+          table: 'eb-table',
+          th: 'eb-table__th',
+        },
         columns: [
           {
             id: 'studentName',
@@ -109,6 +143,10 @@ limitations under the License.
       }).render(document.getElementById('additional-fees-table'));
 
       this.recentPaymentGrid = new Grid({
+        className: {
+          table: 'eb-table',
+          th: 'eb-table__th',
+        },
         columns: [
           {
             id: 'PaymentDate',
@@ -123,6 +161,10 @@ limitations under the License.
       }).render(document.getElementById('recent-payments-table'));
 
       this.upcomingClassesGrid = new Grid({
+        className: {
+          table: 'eb-table',
+          th: 'eb-table__th',
+        },
         columns: [
           { id: 'ClassDate', name: 'Date' },
           { id: 'ClassGroupName', name: 'Class' },
@@ -164,6 +206,13 @@ limitations under the License.
         };
 
         if (this.selectedFamily) {
+          this.feeByMonthGrid
+            .updateConfig({
+              data: () =>
+                getSheetData('getFeesGroupedByMonth').then(Array.from),
+            })
+            .forceRender();
+
           this.recentAttendanceGrid
             .updateConfig({
               data: () =>
@@ -191,10 +240,10 @@ limitations under the License.
             })
             .forceRender();
 
-          getSheetData('getBalance').then(balance => {
-            this.balance = balance;
-            this.hasBalanceData = true;
-          });
+          // getSheetData('getBalance').then(balance => {
+          //   this.balance = balance;
+          //   this.hasBalanceData = true;
+          // });
         }
       },
     },
@@ -222,30 +271,56 @@ limitations under the License.
     </div>
   </section>
   <section class="family-details-container">
+    <h2>Amount owed per month</h2>
+    <p>
+      Please note: the total for each month
+      <strong
+        ><u><i>MAY</i></u></strong
+      >
+      vary if you have any additional fees due to delays in payment.
+    </p>
+    <p class="color-red">
+      <strong>
+        Please pay the full amount for the month as listed below regardless of
+        your attendance. Check the additional fees section further below and
+        make your payment accordingly. Credit wil be given at the end of the
+        semester.
+      </strong>
+    </p>
+    <div id="fee-by-month-table"></div>
     <div v-show="hasBalanceData">
       <div class="family-details__balance">
         <h2>Balance Info</h2>
         <div v-if="balance <= 0">
           <h4>You have a credit of: {{ formattedBalance }}</h4>
           <small class="balance-note">
-            A negative balance reflects a credit on your account. This balance will carry over into next month.
+            A negative balance reflects a credit on your account. This balance
+            will carry over into next month.
           </small>
         </div>
         <div v-if="balance > 0">
           <h4>You have a balance due of: {{ formattedBalance }}</h4>
           <small class="balance-note">
-            This balance covers the remaining classes for this month. Please settle it at your earliest convenience. If you anticipate missing any upcoming classes, kindly adjust your payment accordingly and inform us of your absence in advance.
+            This balance covers the remaining classes for this month. Please
+            settle it at your earliest convenience. If you anticipate missing
+            any upcoming classes, kindly adjust your payment accordingly and
+            inform us of your absence in advance.
           </small>
         </div>
       </div>
     </div>
+    <div class="family-details__additional-fees">
+      <h2>Additional Fees</h2>
+      <small>
+        This section will show all late fees, referral credits and any
+        additional charges. All credits accumulated will be refunded at the end
+        of the semester.
+      </small>
+      <div id="additional-fees-table"></div>
+    </div>
     <div class="family-details__recent-attendance">
       <h2>Recent Attendance</h2>
       <div id="recent-attendance-table"></div>
-    </div>
-    <div class="family-details__additional-fees">
-      <h2>Additional Fees</h2>
-      <div id="additional-fees-table"></div>
     </div>
     <div class="family-details__recent-payments">
       <h2>Recent Payments</h2>

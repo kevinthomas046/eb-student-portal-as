@@ -281,6 +281,63 @@ function getUpcomingClassesByFamily(familyId: number) {
   });
 }
 
+function getFeesGroupedByMonth(familyId: number) {
+  // Get a list of students where familyID = input.familyID AND active = true
+  const studentsData = getSheetByName<StudentEntry>('Students');
+  const uniqueClassGroupIds: number[] = Array.from(
+    new Set(
+      studentsData
+        .slice(1)
+        .filter(row => row[2] === familyId && row[4] === true)
+        .map(row => row[3])
+    )
+  );
+
+  console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
+
+  const classesData = getSheetByName<ClassEntry>('Classes');
+  const classGroupsData = getSheetByName<ClassGroupEntry>('ClassGroups')
+    .filter(row => row[0] && row[1])
+    .reduce(
+      (acc, [groupId, groupName, classPrice]) => {
+        acc[groupId] = classPrice;
+        return acc;
+      },
+      {} as Record<number, number>
+    );
+
+  const feesByMonthMap = classesData.slice(1).reduce(
+    (acc, [classId, classGroupId, classDate, classPrice]) => {
+      if (classId) {
+        const classDateObj = new Date(classDate);
+        const classMonth = new Intl.DateTimeFormat('en-US', {
+          month: 'long',
+        }).format(classDateObj);
+        const price = classPrice || classGroupsData[classGroupId];
+
+        if (uniqueClassGroupIds.includes(classGroupId)) {
+          if (acc[classMonth]) {
+            acc[classMonth] += price;
+          } else {
+            acc[classMonth] = price;
+          }
+        }
+      }
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  console.log('Fees for family', familyId, feesByMonthMap);
+
+  const feesByMonth = Object.entries(feesByMonthMap).map(([key, value]) => ({
+    month: key,
+    fees: value,
+  }));
+
+  return feesByMonth;
+}
+
 function getAdditionalFees(familyId: number): AdditionalFeesRecord[] {
   // get all students that belong to a particular family using familyId
   const studentsData = getSheetByName<StudentEntry>('Students');
