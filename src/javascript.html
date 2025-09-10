@@ -240,10 +240,10 @@ limitations under the License.
             })
             .forceRender();
 
-          // getSheetData('getBalance').then(balance => {
-          //   this.balance = balance;
-          //   this.hasBalanceData = true;
-          // });
+          getSheetData('getBalance').then(balance => {
+            this.balance = balance;
+            this.hasBalanceData = true;
+          });
         }
       },
     },

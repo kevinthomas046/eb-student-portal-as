@@ -281,7 +281,7 @@ function getUpcomingClassesByFamily(familyId: number) {
   });
 }
 
-function getFeesGroupedByMonth(familyId: number) {
+function getFeesMapByMonth(familyId: number) {
   // Get a list of students where familyID = input.familyID AND active = true
   const studentsData = getSheetByName<StudentEntry>('Students');
   const uniqueClassGroupIds: number[] = Array.from(
@@ -310,29 +310,38 @@ function getFeesGroupedByMonth(familyId: number) {
     (acc, [classId, classGroupId, classDate, classPrice]) => {
       if (classId) {
         const classDateObj = new Date(classDate);
-        const classMonth = new Intl.DateTimeFormat('en-US', {
+        const classMonth = classDateObj.getMonth();
+        const classMonthLong = new Intl.DateTimeFormat('en-US', {
           month: 'long',
         }).format(classDateObj);
         const price = classPrice || classGroupsData[classGroupId];
 
         if (uniqueClassGroupIds.includes(classGroupId)) {
           if (acc[classMonth]) {
-            acc[classMonth] += price;
+            acc[classMonth].price += price;
           } else {
-            acc[classMonth] = price;
+            acc[classMonth] = {
+              month: classMonthLong,
+              price,
+            };
           }
         }
       }
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<number, { price: number; month: string }>
   );
 
+  return feesByMonthMap;
+}
+
+function getFeesGroupedByMonth(familyId: number) {
+  const feesByMonthMap = getFeesMapByMonth(familyId);
   console.log('Fees for family', familyId, feesByMonthMap);
 
-  const feesByMonth = Object.entries(feesByMonthMap).map(([key, value]) => ({
-    month: key,
-    fees: value,
+  const feesByMonth = Object.entries(feesByMonthMap).map(([_, value]) => ({
+    month: value.month,
+    fees: value.price,
   }));
 
   return feesByMonth;
@@ -388,45 +397,48 @@ function getBalance(familyId: number): number {
   let balance = 0;
   const currentMonth = new Date().getMonth();
 
-  const recentAttendance = getRecentAttendanceByFamily(familyId);
+  // Balance is calculated using following formula:
+  // Get family fees for all months till current month PLUS
+  // All additional fees > 0 MINUS
+  // All payments made so far
+
   const recentPayments = getRecentPaymentsByFamily(familyId);
   const additionalFees = getAdditionalFees(familyId);
-  const upcomingClasses = getUpcomingClassesByFamily(familyId);
+  const feesByMonthMap = getFeesMapByMonth(familyId);
 
-  const classFees = recentAttendance.reduce((classFees, attendance) => {
-    classFees += Number(attendance.Price);
-    return classFees;
-  }, 0);
+  // Add up all the monthly fees up to current month
+  const classFees = Object.entries(feesByMonthMap).reduce(
+    (acc, [month, fee]) => {
+      if (currentMonth >= Number(month)) {
+        acc += fee.price;
+      }
+
+      return acc;
+    },
+    0
+  );
 
   const paymentTotal = recentPayments.reduce((paymentTotal, payment) => {
     paymentTotal += Number(payment.AmountPaid);
     return paymentTotal;
   }, 0);
 
+  // Add up all the additional charges
+  // These charges will be positive values in the additional fees sheet
   const additionalFeesTotal = additionalFees.reduce(
-    (additionalFeesTotal, additionalFee) => {
-      additionalFeesTotal += Number(additionalFee.price);
+    (additionalFeesTotal, additionalFeeRecord) => {
+      const additionalFee = Number(additionalFeeRecord.price);
+
+      if (additionalFee > 0) {
+        additionalFeesTotal += additionalFee;
+      }
+
       return additionalFeesTotal;
     },
     0
   );
 
-  const currentMonthRemainingClassesTotal = upcomingClasses.reduce(
-    (total, upcomingClass) => {
-      if (new Date(upcomingClass.ClassDate).getMonth() === currentMonth) {
-        total += Number(upcomingClass.Price);
-      }
-
-      return total;
-    },
-    0
-  );
-
-  balance =
-    classFees +
-    additionalFeesTotal +
-    currentMonthRemainingClassesTotal -
-    paymentTotal;
+  balance = classFees + additionalFeesTotal - paymentTotal;
 
   return balance;
 }
