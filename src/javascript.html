@@ -59,6 +59,8 @@ limitations under the License.
     created() {
       // fetch on init
       this.getFamilies();
+      // trigger getting all sheets to populate in cache
+      this.populateCache();
     },
     mounted() {
       this.feeByMonthGrid = new Grid({
@@ -177,6 +179,9 @@ limitations under the License.
       }).render(document.getElementById('upcoming-classes-table'));
     },
     methods: {
+      populateCache() {
+        google.script.run.getAllSheets();
+      },
       getFamilies() {
         this.isFamiliesLoading = true;
         google.script.run

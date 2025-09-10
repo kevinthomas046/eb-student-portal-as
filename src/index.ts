@@ -77,6 +77,7 @@ function getSheetByName<SheetEntryType>(
 
   if (cachedSheetData !== '') {
     try {
+      console.log(`Getting data from cache ${sheetName}`);
       const sheetData = JSON.parse(cachedSheetData);
       return sheetData;
     } catch (e) {
@@ -84,6 +85,7 @@ function getSheetByName<SheetEntryType>(
     }
   }
 
+  console.log(`Getting data from sheet ${sheetName}`);
   const sheet =
     SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(sheetName);
 
@@ -95,6 +97,19 @@ function getSheetByName<SheetEntryType>(
   cache?.put(sheetName, JSON.stringify(sheetData), 60);
 
   return sheetData as Array<SheetEntryType>;
+}
+
+/**
+ * Cache filling function to get all sheets prematurely and populate in cache
+ */
+function getAllSheets() {
+  getSheetByName('Families');
+  getSheetByName('Classes');
+  getSheetByName('ClassGroups');
+  getSheetByName('Payments');
+  getSheetByName('Students');
+  getSheetByName('AdditionalFees');
+  getSheetByName('Attendance');
 }
 
 /**
