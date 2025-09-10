@@ -453,7 +453,7 @@ function getBalance(familyId: number): number {
     0
   );
 
-  balance = Math.min(classFees + additionalFeesTotal - paymentTotal, 0);
+  balance = Math.max(classFees + additionalFeesTotal - paymentTotal, 0);
 
   return balance;
 }
