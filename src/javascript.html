@@ -296,22 +296,7 @@ limitations under the License.
     <div v-show="hasBalanceData">
       <div class="family-details__balance">
         <h2>Balance Info</h2>
-        <div v-if="balance <= 0">
-          <h4>You have a credit of: {{ formattedBalance }}</h4>
-          <small class="balance-note">
-            A negative balance reflects a credit on your account. This balance
-            will carry over into next month.
-          </small>
-        </div>
-        <div v-if="balance > 0">
-          <h4>You have a balance due of: {{ formattedBalance }}</h4>
-          <small class="balance-note">
-            This balance covers the remaining classes for this month. Please
-            settle it at your earliest convenience. If you anticipate missing
-            any upcoming classes, kindly adjust your payment accordingly and
-            inform us of your absence in advance.
-          </small>
-        </div>
+        <h4>You have a balance due of: {{ formattedBalance }}</h4>
       </div>
     </div>
     <div class="family-details__additional-fees">
