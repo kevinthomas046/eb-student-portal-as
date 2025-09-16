@@ -443,11 +443,7 @@ function getBalance(familyId: number): number {
   const additionalFeesTotal = additionalFees.reduce(
     (additionalFeesTotal, additionalFeeRecord) => {
       const additionalFee = Number(additionalFeeRecord.price);
-
-      if (additionalFee > 0) {
-        additionalFeesTotal += additionalFee;
-      }
-
+      additionalFeesTotal += additionalFee;
       return additionalFeesTotal;
     },
     0
