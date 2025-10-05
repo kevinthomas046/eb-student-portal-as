@@ -309,16 +309,12 @@ function getUpcomingClassesByFamily(familyId: number) {
 function getFeesMapByMonth(familyId: number) {
   // Get a list of students where familyID = input.familyID AND active = true
   const studentsData = getSheetByName<StudentEntry>('Students');
-  const uniqueClassGroupIds: number[] = Array.from(
-    new Set(
-      studentsData
-        .slice(1)
-        .filter(row => row[2] === familyId && row[4] === true)
-        .map(row => row[3])
-    )
-  );
+  const familyClassGroupIds: number[] = studentsData
+    .slice(1)
+    .filter(row => row[2] === familyId && row[4] === true)
+    .map(row => row[3]);
 
-  console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
+  console.log('Class groups for family ', familyId, 'are', familyClassGroupIds);
 
   const classesData = getSheetByName<ClassEntry>('Classes');
   const classGroupsData = getSheetByName<ClassGroupEntry>('ClassGroups')
@@ -340,14 +336,18 @@ function getFeesMapByMonth(familyId: number) {
           month: 'long',
         }).format(classDateObj);
         const price = classPrice || classGroupsData[classGroupId];
+        const classCount = familyClassGroupIds.reduce(
+          (count, item) => (item === classGroupId ? count + 1 : count),
+          0
+        );
 
-        if (uniqueClassGroupIds.includes(classGroupId)) {
+        if (classCount > 0) {
           if (acc[classMonth]) {
-            acc[classMonth].price += price;
+            acc[classMonth].price += price * classCount;
           } else {
             acc[classMonth] = {
               month: classMonthLong,
-              price,
+              price: price * classCount,
             };
           }
         }
