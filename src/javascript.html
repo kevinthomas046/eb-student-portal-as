@@ -276,29 +276,35 @@ limitations under the License.
     </div>
   </section>
   <section class="family-details-container">
-    <h2>Amount owed on first of every month</h2>
+    <!-- <h2>Important Notice from Team:</h2>
     <p>
-      Please note: the total for each month
-      <strong
-        ><u><i>MAY</i></u></strong
-      >
-      vary if you have any additional fees due to delays in payment.
-    </p>
-    <p class="color-red">
+      Please pay the full amount for the month as listed below regardless of
+      your attendance. Check the additional fees section further below to see
+      any accrued late fees. Credit wil be given at the end of the semester.
+    </p> -->
+    <div v-show="hasBalanceData">
+      <div class="family-details__balance">
+        <h2>Amount Owed</h2>
+        <h4>You have a balance due of: {{ formattedBalance }}</h4>
+        <p>
+          Please note: Your balance for each month
+          <strong
+            ><u><i>MAY</i></u></strong
+          >
+          differ from the table below based on your start date, trial class,
+          and/or accrued late fee(s).
+        </p>
+      </div>
+    </div>
+    <h2>Monthly Payments for the Semester</h2>
+    <p>
       <strong>
-        Please pay the full amount for the month as listed below regardless of
-        your attendance. Check the additional fees section further below and
-        make your payment accordingly. Credit wil be given at the end of the
-        semester.
+        The table below is a reference for your monthly payments for all
+        scheduled classes. This does not include late fees, free trial classes,
+        or mid month start date.
       </strong>
     </p>
     <div id="fee-by-month-table"></div>
-    <div v-show="hasBalanceData">
-      <div class="family-details__balance">
-        <h2>Balance Info</h2>
-        <h4>You have a balance due of: {{ formattedBalance }}</h4>
-      </div>
-    </div>
     <div class="family-details__additional-fees">
       <details>
         <summary>
@@ -306,8 +312,8 @@ limitations under the License.
         </summary>
         <small>
           This section will show all late fees, referral credits and any
-          additional charges. All credits accumulated will be refunded at the end
-          of the semester.
+          additional charges. All credits accumulated will be refunded at the
+          end of the semester.
         </small>
         <div id="additional-fees-table"></div>
       </details>
