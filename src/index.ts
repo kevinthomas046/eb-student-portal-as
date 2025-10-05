@@ -119,10 +119,20 @@ function getAllSheets() {
 /* eslint-disable @typescript-eslint/no-unused-vars */
 function getFamilies(): Array<FamilyRecord> {
   const familiesData = getSheetByName<FamilyEntry>('Families');
+  const studentsData = getSheetByName<StudentEntry>('Students');
+
+  const activeFamilies = Array.from(
+    new Set(
+      studentsData
+        .slice(1)
+        .filter(row => row[4] === true)
+        .map(row => row[2])
+    )
+  );
 
   return familiesData
     .slice(1)
-    .filter(row => row[0] && row[1])
+    .filter(row => row[0] && row[1] && activeFamilies.includes(row[0]))
     .map(row => ({ FamilyId: row[0], FamilyName: row[1] }) as FamilyRecord)
     .sort((familyA, familyB) => {
       const familyNameA = familyA.FamilyName.toUpperCase();
