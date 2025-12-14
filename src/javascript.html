@@ -310,6 +310,13 @@ limitations under the License.
         </p>
       </div>
     </div>
+    <div v-show="hasCreditData">
+      <div class="family-details__balance">
+        <h2>Credit Info</h2>
+        <h4>Your total refund: {{ formattedCredit }}</h4>
+        <small>All credits will be refunded at the end of the semester. This includes missed/cancelled classes and referral credit.</small>
+      </div>
+    </div>
     <h2>Monthly Payments for the Semester</h2>
     <p>
       <strong>
@@ -355,13 +362,6 @@ limitations under the License.
         </summary>
         <div id="upcoming-classes-table"></div>
       </details>
-    </div>
-    <div v-show="hasCreditData">
-      <div class="family-details__balance">
-        <h2>Credit Info</h2>
-        <h4>You have a credit of: {{ formattedCredit }}</h4>
-        <small>All credits will be refunded at the end of the semester. This includes missed classes and referral credit.</small>
-      </div>
     </div>
   </section>
 </template>
