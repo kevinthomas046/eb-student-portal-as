@@ -21,6 +21,7 @@ export interface FamilyRecord {
 
 export interface RecentAttendance {
   AttendanceId: number;
+  ClassId: number;
   ClassDate: string;
   StudentName: string;
   ClassGroupName: string;

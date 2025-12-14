@@ -112,6 +112,23 @@ function getAllSheets() {
   getSheetByName('Attendance');
 }
 
+// Gets all the class groups for a family
+function getClassGroupsForFamily(familyId: number) {
+  // Get a list of students where familyID = input.familyID AND active = true
+  const studentsData = getSheetByName<StudentEntry>('Students');
+  const uniqueClassGroupIds: number[] = Array.from(
+    new Set(
+      studentsData
+        .slice(1)
+        .filter(row => row[2] === familyId && row[4] === true)
+        .map(row => row[3])
+    )
+  );
+
+  console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
+  return uniqueClassGroupIds;
+}
+
 /**
  * Retrieves a list of all families with their IDs and names from the Families google sheet.
  * @returns {Array<FamilyRow>} Array of objects containing family IDs and names.
@@ -225,6 +242,7 @@ function getRecentAttendanceByFamily(
         StudentName: attendance.StudentName || '',
         ClassGroupName: classGroupDetails[1],
         Price: price,
+        ClassId: attendance.ClassId,
       } as RecentAttendance;
     })
     .sort(({ ClassDate: classDateA }, { ClassDate: classDateB }) => {
@@ -261,36 +279,39 @@ function getRecentPaymentsByFamily(familyId: number): PaymentRecord[] {
     });
 }
 
+function getClassesOfFamily(
+  familyId: number,
+  filterFn?: (row: ClassEntry) => boolean
+): ClassEntry[] {
+  const uniqueClassGroupIds = getClassGroupsForFamily(familyId);
+
+  // Get a list of classes from Class where classGroupID in array of classGroupIDs from uniqueClassGroupIds
+  const classesData = getSheetByName<ClassEntry>('Classes');
+  const classesOfFamily = classesData
+    .slice(1)
+    .filter(
+      (row: ClassEntry) =>
+        uniqueClassGroupIds.includes(row[1]) && filterFn?.(row)
+    );
+
+  return classesOfFamily;
+}
+
 /**
  * A function to get a list of upcoming classes based on family ID selection.
 Input: familyID
 Output: [{ classID, classDate, classGroupName, amount }]"
  */
 function getUpcomingClassesByFamily(familyId: number) {
-  // Get a list of students where familyID = input.familyID AND active = true
-  const studentsData = getSheetByName<StudentEntry>('Students');
-  const uniqueClassGroupIds: number[] = Array.from(
-    new Set(
-      studentsData
-        .slice(1)
-        .filter(row => row[2] === familyId && row[4] === true)
-        .map(row => row[3])
-    )
-  );
-
-  console.log('Class groups for family ', familyId, 'are', uniqueClassGroupIds);
-
-  // Get a list of classes from Class where classGroupID in array of classGroupIDs from uniqueClassGroupIds
-  const classesData = getSheetByName<ClassEntry>('Classes');
   const classGroupsData = getSheetByName<ClassGroupEntry>('ClassGroups').filter(
     row => row[0] && row[1]
   );
   const today = Date.parse(new Date().toLocaleDateString());
   const isUpcomingClass = (row: ClassEntry): boolean => {
     const classDate = Date.parse(new Date(row[2]).toLocaleDateString());
-    return uniqueClassGroupIds.includes(row[1]) && classDate >= today;
+    return classDate >= today;
   };
-  const upcomingClasses = classesData.slice(1).filter(isUpcomingClass);
+  const upcomingClasses = getClassesOfFamily(familyId, isUpcomingClass);
 
   console.log('Upcoming classes for', familyId, upcomingClasses);
   return upcomingClasses.map(row => {
@@ -462,6 +483,68 @@ function getBalance(familyId: number): number {
   balance = Math.max(classFees + additionalFeesTotal - paymentTotal, 0);
 
   return balance;
+}
+
+function getCredit(familyId: number): number {
+  let credit = 0;
+  // Credit is calculated by adding all the missed classes
+  // Missed classes =
+  // number of classes for this student's student group till date MINUS
+  // number of classes attended
+  // MULTIPLY
+  // price of classgroup
+  const today = Date.parse(new Date().toLocaleDateString());
+  const isPriorClass = (row: ClassEntry): boolean => {
+    const classDate = Date.parse(new Date(row[2]).toLocaleDateString());
+    return classDate < today;
+  };
+
+  const classGroupData = getSheetByName<ClassGroupEntry>('ClassGroups')
+    .filter(row => row[0] && row[1])
+    .reduce(
+      (prev, [groupId, groupName, price]) => {
+        prev[groupId] = {
+          groupId,
+          groupName,
+          price,
+        };
+        return prev;
+      },
+      {} as Record<
+        number,
+        { groupId: number; groupName: string; price: number }
+      >
+    );
+
+  const recentAttendance = getRecentAttendanceByFamily(familyId).map(
+    attendance => attendance.ClassId
+  );
+  const priorClasses = getClassesOfFamily(familyId, isPriorClass).map(
+    ([classId, classGroupId, date, classPrice]) => {
+      return {
+        classId,
+        classGroupId,
+        date,
+        price: classPrice || classGroupData[classGroupId].price,
+      } as {
+        classId: number;
+        classGroupId: number;
+        date: string;
+        price: number;
+      };
+    }
+  );
+
+  const missedClasses = priorClasses.filter(
+    ({ classId }) => !recentAttendance.includes(classId)
+  );
+
+  credit = missedClasses.reduce((prev, next) => {
+    prev += next.price;
+    return prev;
+  }, 0);
+
+  return credit;
 }
 
 function getAllData(familyId: number) {

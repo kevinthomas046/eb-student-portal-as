@@ -46,6 +46,8 @@ limitations under the License.
         hasUpcomingClassesData: false,
         balance: 0,
         hasBalanceData: false,
+        credit: 0,
+        hasCreditData: false,
       };
     },
     computed: {
@@ -55,6 +57,12 @@ limitations under the License.
           currency: 'USD',
         });
       },
+      formattedCredit() {
+        return this.credit.toLocaleString('en-us', {
+          style: 'currency',
+          currency: 'USD',
+        });
+      }
     },
     created() {
       // fetch on init
@@ -196,6 +204,7 @@ limitations under the License.
         this.hasRecentPaymentData = false;
         this.hasUpcomingClassesData = false;
         this.hasBalanceData = false;
+        this.hasCreditData = false;
 
         const getSheetData = async appScriptFunctionName => {
           return new Promise((resolve, reject) => {
@@ -249,6 +258,11 @@ limitations under the License.
             this.balance = balance;
             this.hasBalanceData = true;
           });
+
+          getSheetData('getCredit').then(credit => {
+            this.credit = credit;
+            this.hasCreditData = true;
+          })
         }
       },
     },
@@ -341,6 +355,13 @@ limitations under the License.
         </summary>
         <div id="upcoming-classes-table"></div>
       </details>
+    </div>
+    <div v-show="hasCreditData">
+      <div class="family-details__balance">
+        <h2>Credit Info</h2>
+        <h4>You have a credit of: {{ formattedCredit }}</h4>
+        <small>All credits will be refunded at the end of the semester. This includes missed classes and referral credit.</small>
+      </div>
     </div>
   </section>
 </template>
