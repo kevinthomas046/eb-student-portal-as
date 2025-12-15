@@ -488,6 +488,8 @@ function getBalance(familyId: number): number {
 function getCredit(familyId: number): number {
   let credit = 0;
   // Credit is calculated by adding all the missed classes
+  // and any negative fees (credits) in additional fees table
+  // and any difference in payments and attendance total
   // Missed classes =
   // number of classes for this student's student group till date MINUS
   // number of classes attended
@@ -515,6 +517,17 @@ function getCredit(familyId: number): number {
         { groupId: number; groupName: string; price: number }
       >
     );
+  const additionalFees = getAdditionalFees(familyId);
+  // Add up all the additional charges
+  // These charges will be negative values in the additional fees sheet
+  const additionalFeesTotal = additionalFees.reduce(
+    (additionalFeesTotal, additionalFeeRecord) => {
+      const additionalFee = Math.min(Number(additionalFeeRecord.price), 0);
+      additionalFeesTotal += additionalFee;
+      return additionalFeesTotal;
+    },
+    0
+  );
 
   const recentAttendance = getRecentAttendanceByFamily(familyId).map(
     attendance => attendance.ClassId
@@ -539,10 +552,11 @@ function getCredit(familyId: number): number {
     ({ classId }) => !recentAttendance.includes(classId)
   );
 
+  // Add additionalFeesTotal + all missed class prices
   credit = missedClasses.reduce((prev, next) => {
     prev += next.price;
     return prev;
-  }, 0);
+  }, additionalFeesTotal);
 
   return credit;
 }
