@@ -80,7 +80,7 @@ function getSheetByName<SheetEntryType>(
       console.log(`Getting data from cache ${sheetName}`);
       const sheetData = JSON.parse(cachedSheetData);
       return sheetData;
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -131,6 +131,7 @@ function getClassGroupsForFamily(familyId: number) {
 
 /**
  * Retrieves a list of all families with their IDs and names from the Families google sheet.
+ * Used to populate the family dropdown
  * @returns {Array<FamilyRow>} Array of objects containing family IDs and names.
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -165,6 +166,22 @@ function getFamilies(): Array<FamilyRecord> {
 
       return 0;
     });
+}
+
+// Reusable function to get all students in family
+function getStudentsInFamily(familyId: number) {
+  if (!familyId) {
+    return [];
+  }
+
+  // get all students that belong to a particular family using familyId
+  const studentsData = getSheetByName<StudentEntry>('Students');
+
+  const studentsInFamily = studentsData
+    .slice(1)
+    .filter(row => row[2] === familyId);
+
+  return studentsInFamily;
 }
 
 /**
