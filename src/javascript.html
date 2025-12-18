@@ -58,11 +58,19 @@ limitations under the License.
         });
       },
       formattedCredit() {
-        return this.credit.toLocaleString('en-us', {
-          style: 'currency',
-          currency: 'USD',
-        });
-      }
+        return {
+          totalCredit: this.formatToCurrency(this.credit.totalCredit),
+          missedClassesOfFamilyTotal: this.formatToCurrency(
+            this.credit.missedClassesOfFamilyTotal
+          ),
+          additionalFeesTotal: this.formatToCurrency(
+            this.credit.additionalFeesTotal
+          ),
+          feePaymentDifference: this.formatToCurrency(
+            this.credit.feePaymentDifference
+          ),
+        };
+      },
     },
     created() {
       // fetch on init
@@ -187,6 +195,15 @@ limitations under the License.
       }).render(document.getElementById('upcoming-classes-table'));
     },
     methods: {
+      formatToCurrency(value) {
+        return new Intl.NumberFormat('en-us', {
+          style: 'currency',
+          currency: 'USD',
+        }).format(value);
+      },
+      togglePopover(event) {
+        document.getElementById('credit-breakdown').togglePopover();
+      },
       populateCache() {
         google.script.run.getAllSheets();
       },
@@ -262,7 +279,7 @@ limitations under the License.
           getSheetData('getCredit').then(credit => {
             this.credit = credit;
             this.hasCreditData = true;
-          })
+          });
         }
       },
     },
@@ -313,8 +330,25 @@ limitations under the License.
     <div v-show="hasCreditData">
       <div class="family-details__balance">
         <h2>Credit Info</h2>
-        <h4>Your total refund: {{ formattedCredit }}</h4>
-        <small>All credits will be refunded at the end of the semester. This includes missed/cancelled classes and referral credit.</small>
+        <h4>
+          Your total refund:
+          <span @click="togglePopover"
+            >{{ formattedCredit.totalCredit }}</span
+          >
+        </h4>
+        <small
+          >All credits will be refunded at the end of the semester. This
+          includes missed/cancelled classes and referral credit.</small
+        >
+        <div id="credit-breakdown" popover>
+          <ul>
+            <li>
+              Missed Classes: {{ formattedCredit.missedClassesOfFamilyTotal }}
+            </li>
+            <li>Additional Fees: {{ formattedCredit.additionalFeesTotal }}</li>
+            <li>Overpayment: {{ formattedCredit.feePaymentDifference }}</li>
+          </ul>
+        </div>
       </div>
     </div>
     <h2>Monthly Payments for the Semester</h2>

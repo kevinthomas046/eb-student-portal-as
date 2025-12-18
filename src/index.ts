@@ -479,8 +479,8 @@ function getAdditionalFees(familyId: number): AdditionalFeesRecord[] {
     });
 }
 
-function getBalance(familyId: number): number {
-  let balance = 0;
+function getFeePaymentDifference(familyId: number): number {
+  const balance = 0;
   const currentMonth = new Date().getMonth();
 
   // Balance is calculated using following formula:
@@ -520,12 +520,16 @@ function getBalance(familyId: number): number {
     0
   );
 
-  balance = Math.max(classFees + additionalFeesTotal - paymentTotal, 0);
-
-  return balance;
+  return classFees + additionalFeesTotal - paymentTotal;
 }
 
-function getCredit(familyId: number): number {
+function getBalance(familyId: number): number {
+  const balance = getFeePaymentDifference(familyId);
+
+  return Math.max(balance, 0);
+}
+
+function getCredit(familyId: number) {
   let credit = 0;
   // Credit is calculated by adding all the missed classes
   // and any negative fees (credits) in additional fees table
@@ -611,6 +615,11 @@ function getCredit(familyId: number): number {
     0
   );
 
+  // Calculate any overpayment
+  const feePaymentDifference = Math.abs(
+    Math.min(getFeePaymentDifference(familyId), 0)
+  );
+
   // const priorClasses = getClassesOfFamily(familyId, isPriorClass).map(
   //   ([classId, classGroupId, date, classPrice]) => {
   //     return {
@@ -632,9 +641,15 @@ function getCredit(familyId: number): number {
   // );
 
   // Add additionalFeesTotal + all missed class prices
-  credit = missedClassesOfFamilyTotal + additionalFeesTotal;
+  credit =
+    missedClassesOfFamilyTotal + additionalFeesTotal + feePaymentDifference;
 
-  return credit;
+  return {
+    totalCredit: credit,
+    missedClassesOfFamilyTotal,
+    additionalFeesTotal,
+    feePaymentDifference,
+  };
 }
 
 function getAllData(familyId: number) {
