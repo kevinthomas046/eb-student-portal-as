@@ -352,6 +352,15 @@ function getFeesMapByMonth(familyId: number) {
     .filter(row => row[2] === familyId && row[4] === true)
     .map(row => row[3]);
 
+  const familyClassGroupData: [
+    classGroupId: number,
+    StartDate: string,
+    EndDate: string,
+  ][] = studentsData
+    .slice(1)
+    .filter(row => row[2] === familyId && row[4] === true)
+    .map(row => [row[3], row[5], row[6]]);
+
   console.log('Class groups for family ', familyId, 'are', familyClassGroupIds);
 
   const classesData = getSheetByName<ClassEntry>('Classes');
@@ -374,8 +383,22 @@ function getFeesMapByMonth(familyId: number) {
           month: 'long',
         }).format(classDateObj);
         const price = classPrice || classGroupsData[classGroupId];
-        const classCount = familyClassGroupIds.reduce(
-          (count, item) => (item === classGroupId ? count + 1 : count),
+        // const classCount = familyClassGroupIds.reduce(
+        //   (count, item) => (item === classGroupId ? count + 1 : count),
+        //   0
+        // );
+        // For each class instance, how many of the students in the current family would potentially attend
+        const classCount = familyClassGroupData.reduce(
+          (count, [studentClassGroupId, startDate, endDate]) => {
+            const isValidClass =
+              studentClassGroupId === classGroupId &&
+              (startDate
+                ? Date.parse(startDate) <= classDateObj.getTime()
+                : true) &&
+              (endDate ? Date.parse(endDate) >= classDateObj.getTime() : true);
+
+            return isValidClass ? count + 1 : count;
+          },
           0
         );
 
@@ -490,7 +513,7 @@ function getBalance(familyId: number): number {
   // These charges will be positive values in the additional fees sheet
   const additionalFeesTotal = additionalFees.reduce(
     (additionalFeesTotal, additionalFeeRecord) => {
-      const additionalFee = Number(additionalFeeRecord.price);
+      const additionalFee = Math.max(Number(additionalFeeRecord.price), 0);
       additionalFeesTotal += additionalFee;
       return additionalFeesTotal;
     },
@@ -508,10 +531,12 @@ function getCredit(familyId: number): number {
   // and any negative fees (credits) in additional fees table
   // and any difference in payments and attendance total
   // Missed classes =
-  // number of classes for this student's student group till date MINUS
+  // number of classes for this student's student group till date (OR student's End Date, whichever is earliest) MINUS
   // number of classes attended
   // MULTIPLY
   // price of classgroup
+  const students = getStudentsInFamily(familyId);
+
   const today = Date.parse(new Date().toLocaleDateString());
   const isPriorClass = (row: ClassEntry): boolean => {
     const classDate = Date.parse(new Date(row[2]).toLocaleDateString());
@@ -549,31 +574,65 @@ function getCredit(familyId: number): number {
   const recentAttendance = getRecentAttendanceByFamily(familyId).map(
     attendance => attendance.ClassId
   );
-  const priorClasses = getClassesOfFamily(familyId, isPriorClass).map(
-    ([classId, classGroupId, date, classPrice]) => {
-      return {
-        classId,
-        classGroupId,
-        date,
-        price: classPrice || classGroupData[classGroupId].price,
-      } as {
-        classId: number;
-        classGroupId: number;
-        date: string;
-        price: number;
-      };
-    }
+
+  const classesOfFamily = getClassesOfFamily(familyId, isPriorClass);
+
+  const missedClassesOfFamilyTotal = students.reduce(
+    (missedClassesTotal, student) => {
+      const [, , , studentClassGroupId, , startDate, endDate] = student;
+      const absentClassesTotal = classesOfFamily.reduce(
+        (absentClassesTotal, classEntry) => {
+          const [classId, classGroupId, classDate, classPrice] = classEntry;
+          const isValidClass =
+            studentClassGroupId === classGroupId &&
+            (startDate
+              ? Date.parse(startDate) <= Date.parse(classDate)
+              : true) &&
+            (endDate ? Date.parse(endDate) >= Date.parse(classDate) : true);
+
+          if (isValidClass) {
+            const isMissedClass = !recentAttendance.includes(classId);
+
+            if (isMissedClass) {
+              absentClassesTotal +=
+                classPrice || classGroupData[classGroupId].price;
+            }
+          }
+
+          return absentClassesTotal;
+        },
+        0
+      );
+
+      missedClassesTotal += absentClassesTotal;
+
+      return missedClassesTotal;
+    },
+    0
   );
 
-  const missedClasses = priorClasses.filter(
-    ({ classId }) => !recentAttendance.includes(classId)
-  );
+  // const priorClasses = getClassesOfFamily(familyId, isPriorClass).map(
+  //   ([classId, classGroupId, date, classPrice]) => {
+  //     return {
+  //       classId,
+  //       classGroupId,
+  //       date,
+  //       price: classPrice || classGroupData[classGroupId].price,
+  //     } as {
+  //       classId: number;
+  //       classGroupId: number;
+  //       date: string;
+  //       price: number;
+  //     };
+  //   }
+  // );
+
+  // const missedClasses = priorClasses.filter(
+  //   ({ classId }) => !recentAttendance.includes(classId)
+  // );
 
   // Add additionalFeesTotal + all missed class prices
-  credit = missedClasses.reduce((prev, next) => {
-    prev += next.price;
-    return prev;
-  }, additionalFeesTotal);
+  credit = missedClassesOfFamilyTotal + additionalFeesTotal;
 
   return credit;
 }

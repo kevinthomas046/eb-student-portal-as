@@ -71,6 +71,8 @@ export type StudentEntry = [
   familyId: number,
   classGroupId: number,
   Active: boolean,
+  StartDate: string,
+  EndDate: string,
 ];
 export type AdditionalFeesEntry = [
   feeID: number,
