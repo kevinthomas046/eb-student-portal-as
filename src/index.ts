@@ -479,19 +479,9 @@ function getAdditionalFees(familyId: number): AdditionalFeesRecord[] {
     });
 }
 
-function getFeePaymentDifference(familyId: number): number {
-  const balance = 0;
+function getClassFeesToDate(familyId: number): number {
   const currentMonth = new Date().getMonth();
-
-  // Balance is calculated using following formula:
-  // Get family fees for all months till current month PLUS
-  // All additional fees > 0 MINUS
-  // All payments made so far
-
-  const recentPayments = getRecentPaymentsByFamily(familyId);
-  const additionalFees = getAdditionalFees(familyId);
   const feesByMonthMap = getFeesMapByMonth(familyId);
-
   // Add up all the monthly fees up to current month
   const classFees = Object.entries(feesByMonthMap).reduce(
     (acc, [month, fee]) => {
@@ -504,11 +494,11 @@ function getFeePaymentDifference(familyId: number): number {
     0
   );
 
-  const paymentTotal = recentPayments.reduce((paymentTotal, payment) => {
-    paymentTotal += Math.max(Number(payment.AmountPaid), 0);
-    return paymentTotal;
-  }, 0);
+  return classFees;
+}
 
+function getAdditionalFeeCharges(familyId: number): number {
+  const additionalFees = getAdditionalFees(familyId);
   // Add up all the additional charges
   // These charges will be positive values in the additional fees sheet
   const additionalFeesTotal = additionalFees.reduce(
@@ -520,11 +510,37 @@ function getFeePaymentDifference(familyId: number): number {
     0
   );
 
+  return additionalFeesTotal;
+}
+
+function getFeePaymentDifference(familyId: number): number {
+  const classFees = getClassFeesToDate(familyId);
+  const additionalFeesTotal = getAdditionalFeeCharges(familyId);
+  const recentPayments = getRecentPaymentsByFamily(familyId);
+
+  const paymentTotal = recentPayments.reduce((paymentTotal, payment) => {
+    paymentTotal += Math.max(Number(payment.AmountPaid), 0);
+    return paymentTotal;
+  }, 0);
+
   return classFees + additionalFeesTotal - paymentTotal;
 }
 
 function getBalance(familyId: number): number {
-  const balance = getFeePaymentDifference(familyId);
+  let balance = 0;
+
+  // Balance = classFees + addtionalFees - (payments + refunds)
+  const classFees = getClassFeesToDate(familyId);
+  const additionalFees = getAdditionalFeeCharges(familyId);
+  const recentPayments = getRecentPaymentsByFamily(familyId);
+
+  const paymentTotal = recentPayments.reduce((paymentTotal, payment) => {
+    // By using Math.abs we're adding all payments and refunds to the variable paymentTotal
+    paymentTotal += Math.abs(Number(payment.AmountPaid));
+    return paymentTotal;
+  }, 0);
+
+  balance = classFees + additionalFees - paymentTotal;
 
   return Math.max(balance, 0);
 }
@@ -627,27 +643,6 @@ function getCredit(familyId: number) {
     return paymentTotal;
   }, 0);
 
-  // const priorClasses = getClassesOfFamily(familyId, isPriorClass).map(
-  //   ([classId, classGroupId, date, classPrice]) => {
-  //     return {
-  //       classId,
-  //       classGroupId,
-  //       date,
-  //       price: classPrice || classGroupData[classGroupId].price,
-  //     } as {
-  //       classId: number;
-  //       classGroupId: number;
-  //       date: string;
-  //       price: number;
-  //     };
-  //   }
-  // );
-
-  // const missedClasses = priorClasses.filter(
-  //   ({ classId }) => !recentAttendance.includes(classId)
-  // );
-
-  // Add additionalFeesTotal + all missed class prices
   credit =
     missedClassesOfFamilyTotal +
     additionalFeesTotal +
