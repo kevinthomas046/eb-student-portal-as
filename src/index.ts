@@ -505,7 +505,7 @@ function getFeePaymentDifference(familyId: number): number {
   );
 
   const paymentTotal = recentPayments.reduce((paymentTotal, payment) => {
-    paymentTotal += Number(payment.AmountPaid);
+    paymentTotal += Math.max(Number(payment.AmountPaid), 0);
     return paymentTotal;
   }, 0);
 
@@ -620,6 +620,13 @@ function getCredit(familyId: number) {
     Math.min(getFeePaymentDifference(familyId), 0)
   );
 
+  // Calculate all payments/refunds
+  const recentPayments = getRecentPaymentsByFamily(familyId);
+  const refunds = recentPayments.reduce((paymentTotal, payment) => {
+    paymentTotal += Math.abs(Math.min(Number(payment.AmountPaid), 0));
+    return paymentTotal;
+  }, 0);
+
   // const priorClasses = getClassesOfFamily(familyId, isPriorClass).map(
   //   ([classId, classGroupId, date, classPrice]) => {
   //     return {
@@ -642,13 +649,17 @@ function getCredit(familyId: number) {
 
   // Add additionalFeesTotal + all missed class prices
   credit =
-    missedClassesOfFamilyTotal + additionalFeesTotal + feePaymentDifference;
+    missedClassesOfFamilyTotal +
+    additionalFeesTotal +
+    feePaymentDifference -
+    refunds;
 
   return {
     totalCredit: credit,
     missedClassesOfFamilyTotal,
     additionalFeesTotal,
     feePaymentDifference,
+    refunds,
   };
 }
 

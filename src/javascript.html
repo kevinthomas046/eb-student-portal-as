@@ -69,6 +69,9 @@ limitations under the License.
           feePaymentDifference: this.formatToCurrency(
             this.credit.feePaymentDifference
           ),
+          refunds: this.formatToCurrency(
+            this.credit.refunds
+          )
         };
       },
     },
@@ -201,8 +204,11 @@ limitations under the License.
           currency: 'USD',
         }).format(value);
       },
-      togglePopover(event) {
-        document.getElementById('credit-breakdown').togglePopover();
+      openDialog(event) {
+        document.getElementById('credit-breakdown').showModal();
+      },
+      closeDialog(event) {
+        document.getElementById('credit-breakdown').close();
       },
       populateCache() {
         google.script.run.getAllSheets();
@@ -332,7 +338,7 @@ limitations under the License.
         <h2>Credit Info</h2>
         <h4>
           Your total refund:
-          <span @click="togglePopover"
+          <span class="family-details__refund-details" @click="openDialog"
             >{{ formattedCredit.totalCredit }}</span
           >
         </h4>
@@ -340,14 +346,16 @@ limitations under the License.
           >All credits will be refunded at the end of the semester. This
           includes missed/cancelled classes and referral credit.</small
         >
-        <div id="credit-breakdown" popover>
-          <ul>
+        <dialog id="credit-breakdown">
+          <ul class="family-details__credit-breakdown-list">
             <li>
               Missed Classes: {{ formattedCredit.missedClassesOfFamilyTotal }}
             </li>
             <li>Additional Fees: {{ formattedCredit.additionalFeesTotal }}</li>
             <li>Overpayment: {{ formattedCredit.feePaymentDifference }}</li>
+            <li>Refunds: {{ formattedCredit.refunds }}</li>
           </ul>
+          <button class="close" @click="closeDialog">Close</button>
         </div>
       </div>
     </div>
