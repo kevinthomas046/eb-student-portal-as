@@ -594,18 +594,14 @@ function getCredit(familyId: number) {
     0
   );
 
-  const recentAttendance = getRecentAttendanceByFamily(familyId).map(
-    attendance => attendance.ClassId
-  );
-
   const classesOfFamily = getClassesOfFamily(familyId, isPriorClass);
 
-  const missedClassesOfFamilyTotal = students.reduce(
-    (missedClassesTotal, student) => {
+  const canclledClassesOfFamilyTotal = students.reduce(
+    (cancelledClassesTotal, student) => {
       const [, , , studentClassGroupId, , startDate, endDate] = student;
-      const absentClassesTotal = classesOfFamily.reduce(
-        (absentClassesTotal, classEntry) => {
-          const [classId, classGroupId, classDate, classPrice] = classEntry;
+      const cancelledClasses = classesOfFamily.reduce(
+        (cancelledClasses, classEntry) => {
+          const [, classGroupId, classDate, classPrice, cancelled] = classEntry;
           const isValidClass =
             studentClassGroupId === classGroupId &&
             (startDate
@@ -614,22 +610,22 @@ function getCredit(familyId: number) {
             (endDate ? Date.parse(endDate) >= Date.parse(classDate) : true);
 
           if (isValidClass) {
-            const isMissedClass = !recentAttendance.includes(classId);
+            const isMissedClass = cancelled === true;
 
             if (isMissedClass) {
-              absentClassesTotal +=
+              cancelledClasses +=
                 classPrice || classGroupData[classGroupId].price;
             }
           }
 
-          return absentClassesTotal;
+          return cancelledClasses;
         },
         0
       );
 
-      missedClassesTotal += absentClassesTotal;
+      cancelledClassesTotal += cancelledClasses;
 
-      return missedClassesTotal;
+      return cancelledClassesTotal;
     },
     0
   );
@@ -647,14 +643,14 @@ function getCredit(familyId: number) {
   }, 0);
 
   credit =
-    missedClassesOfFamilyTotal +
+    canclledClassesOfFamilyTotal +
     additionalFeesTotal +
     feePaymentDifference -
     refunds;
 
   return {
     totalCredit: credit,
-    missedClassesOfFamilyTotal,
+    canclledClassesOfFamilyTotal,
     additionalFeesTotal,
     feePaymentDifference,
     refunds,

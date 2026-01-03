@@ -93,6 +93,7 @@ export type ClassEntry = [
   classGroupId: number,
   Date: string,
   Price: number,
+  Cancelled: boolean,
 ];
 export type PaymentEntry = [
   paymentId: number,

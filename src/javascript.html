@@ -60,8 +60,8 @@ limitations under the License.
       formattedCredit() {
         return {
           totalCredit: this.formatToCurrency(this.credit.totalCredit),
-          missedClassesOfFamilyTotal: this.formatToCurrency(
-            this.credit.missedClassesOfFamilyTotal
+          canclledClassesOfFamilyTotal: this.formatToCurrency(
+            this.credit.canclledClassesOfFamilyTotal
           ),
           additionalFeesTotal: this.formatToCurrency(
             this.credit.additionalFeesTotal
@@ -344,12 +344,12 @@ limitations under the License.
         </h4>
         <small
           >All credits will be refunded at the end of the semester. This
-          includes missed/cancelled classes and referral credit.</small
+          includes cancelled classes and referral credit.</small
         >
         <dialog id="credit-breakdown">
           <ul class="family-details__credit-breakdown-list">
             <li>
-              Missed Classes: {{ formattedCredit.missedClassesOfFamilyTotal }}
+              Cancelled Classes: {{ formattedCredit.canclledClassesOfFamilyTotal }}
             </li>
             <li>Additional Fees: {{ formattedCredit.additionalFeesTotal }}</li>
             <li>Overpayment: {{ formattedCredit.feePaymentDifference }}</li>
