@@ -179,7 +179,7 @@ function getStudentsInFamily(familyId: number) {
 
   const studentsInFamily = studentsData
     .slice(1)
-    .filter(row => row[2] === familyId);
+    .filter(row => row[2] === familyId && row[4] === true);
 
   return studentsInFamily;
 }
