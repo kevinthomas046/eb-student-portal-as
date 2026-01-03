@@ -669,3 +669,11 @@ function getAllData(familyId: number) {
     additionalFees: getAdditionalFees(familyId),
   };
 }
+
+function testFunction() {
+  const credit = getCredit(1);
+  const balance = getBalance(1);
+
+  console.log('CREDIT', credit);
+  console.log('BALANCE', balance);
+}
