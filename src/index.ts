@@ -408,6 +408,8 @@ function getFeesMapByMonth(familyId: number) {
           } else {
             acc[classMonth] = {
               month: classMonthLong,
+              monthShort: classMonth,
+              year: classDateObj.getFullYear(),
               price: price * classCount,
             };
           }
@@ -415,7 +417,10 @@ function getFeesMapByMonth(familyId: number) {
       }
       return acc;
     },
-    {} as Record<number, { price: number; month: string }>
+    {} as Record<
+      number,
+      { price: number; month: string; year: number; monthShort: number }
+    >
   );
 
   return feesByMonthMap;
@@ -480,19 +485,17 @@ function getAdditionalFees(familyId: number): AdditionalFeesRecord[] {
 }
 
 function getClassFeesToDate(familyId: number): number {
-  const currentMonth = new Date().getMonth();
+  const currentDate = new Date();
   const feesByMonthMap = getFeesMapByMonth(familyId);
   // Add up all the monthly fees up to current month
-  const classFees = Object.entries(feesByMonthMap).reduce(
-    (acc, [month, fee]) => {
-      if (currentMonth >= Number(month)) {
-        acc += fee.price;
-      }
+  const classFees = Object.entries(feesByMonthMap).reduce((acc, [, fee]) => {
+    const feeDate = new Date(fee.year, fee.monthShort);
+    if (currentDate.getTime() >= feeDate.getTime()) {
+      acc += fee.price;
+    }
 
-      return acc;
-    },
-    0
-  );
+    return acc;
+  }, 0);
 
   return classFees;
 }
