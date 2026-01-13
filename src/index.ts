@@ -135,7 +135,7 @@ function getClassGroupsForFamily(familyId: number) {
  * @returns {Array<FamilyRow>} Array of objects containing family IDs and names.
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-function getFamilies(): Array<FamilyRecord> {
+export function getFamilies(): Array<FamilyRecord> {
   const familiesData = getSheetByName<FamilyEntry>('Families');
   const studentsData = getSheetByName<StudentEntry>('Students');
 

@@ -36,7 +36,9 @@ export default {
       },
     }),
     copy({ patterns: '*.html', rootDir: './src' }),
-    typescript(),
+    typescript({
+      useTsconfigDeclarationDir: true,
+    }),
     prettier({ parser: 'typescript' }),
   ],
   context: 'this',
